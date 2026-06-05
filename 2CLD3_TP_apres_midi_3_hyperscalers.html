@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2CLD3 – TP complément après-midi : AWS, Azure, Google Cloud</title>
+  <style>
+    :root{--blue:#1f3f82;--blue2:#0b65c2;--red:#e91e63;--green:#197642;--bg:#f6f8fc;--ink:#172033;--muted:#5d6980;--card:#fff;--border:#dfe6f2;--warn:#fff4df;--ok:#ecf8f1}
+    *{box-sizing:border-box} body{margin:0;font-family:Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.55}
+    header{background:linear-gradient(135deg,#102b62,#0b65c2);color:white;padding:42px 28px} header .wrap, main{max-width:1180px;margin:auto} h1{margin:0;font-size:2.2rem} .subtitle{font-size:1.1rem;opacity:.92;margin-top:8px}.pill{display:inline-block;background:#ffffff22;border:1px solid #ffffff55;border-radius:999px;padding:6px 12px;margin-top:18px}
+    main{padding:28px} h2{color:var(--blue);font-size:1.75rem;border-left:5px solid var(--red);padding-left:12px;margin-top:34px} h3{color:#12356f;margin-top:22px}.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin:18px 0;box-shadow:0 3px 12px #1b2b4a0d}.grid{display:grid;gap:16px}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:repeat(2,1fr)}
+    @media(max-width:900px){.g3,.g2{grid-template-columns:1fr} h1{font-size:1.7rem}}
+    .actor h3{margin-top:0;color:white}.actor.aws{border-top:8px solid #ff9900}.actor.azure{border-top:8px solid #0078d4}.actor.gcp{border-top:8px solid #4285f4}.actor .head{margin:-20px -20px 16px -20px;padding:16px 20px;border-radius:14px 14px 0 0;color:white}.aws .head{background:#232f3e}.azure .head{background:#0078d4}.gcp .head{background:#1a73e8}.tag{display:inline-block;border-radius:6px;background:#eef3fb;border:1px solid var(--border);padding:3px 8px;margin:2px 3px;font-size:.9rem}.answer{background:var(--ok);border-left:5px solid var(--green);padding:14px;border-radius:10px}.reflection{background:#eef5ff;border-left:5px solid var(--blue2);padding:14px;border-radius:10px}.warning{background:var(--warn);border-left:5px solid #f5a400;padding:14px;border-radius:10px}.question{background:white;border:1px dashed #9bb1d1;border-radius:10px;padding:14px}.toc a{display:inline-block;margin:4px 8px 4px 0;padding:6px 10px;border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--blue);background:white}.mini{font-size:.94rem;color:var(--muted)} table{width:100%;border-collapse:collapse;background:white;border-radius:12px;overflow:hidden} th,td{border:1px solid var(--border);padding:10px;text-align:left;vertical-align:top} th{background:#eaf1fb;color:#102b62}.source a{color:var(--blue2)} footer{margin-top:36px;color:var(--muted);font-size:.9rem}.corrige-link{float:right;font-size:.9rem}.kpi{font-size:1.8rem;font-weight:700;color:var(--blue)}
+  </style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>TP complément après-midi – Comprendre les 3 grands acteurs du Cloud</h1>
+  <div class="subtitle">AWS, Microsoft Azure, Google Cloud : positions, forces, limites, services équivalents et critères de choix.</div>
+  <div class="pill">Objectif : ne pas mémoriser un catalogue, mais savoir raisonner un choix Cloud.</div>
+</div></header>
+<main>
+<section class="card toc">
+  <strong>Navigation :</strong>
+  <a href="#objectif">Objectif pédagogique</a><a href="#marche">Marché</a><a href="#aws">AWS</a><a href="#azure">Azure</a><a href="#gcp">Google Cloud</a><a href="#equivalences">Services équivalents</a><a href="#tp">TP étudiant</a><a href="#corrige">Corrigé</a><a href="#sources">Sources</a>
+</section>
+
+<section id="objectif" class="card">
+  <h2>1. Objectif pédagogique</h2>
+  <p>La présentation des trois hyperscalers ne doit pas se limiter à « AWS, Azure, GCP font du Cloud ». Il faut aider les étudiants à comprendre que chaque fournisseur a une histoire, une culture technique, un écosystème, des forces et des contraintes.</p>
+  <div class="answer"><strong>Réponse courte à transmettre :</strong> AWS est souvent perçu comme le pionnier très riche en services et très mature ; Azure est très fort dans les entreprises déjà Microsoft et l’hybride ; Google Cloud est très différenciant sur la donnée, Kubernetes, l’IA et l’ingénierie issue de Google.</div>
+  <div class="reflection"><strong>Piste de réflexion :</strong> dans un vrai projet, le meilleur Cloud n’est pas le plus « populaire » : c’est celui qui correspond au contexte métier, aux compétences internes, aux contraintes de sécurité, aux coûts, aux services nécessaires et à la stratégie de l’entreprise.</div>
+</section>
+
+<section id="marche">
+  <h2>2. Le marché : pourquoi parle-t-on surtout d’AWS, Azure et Google Cloud ?</h2>
+  <div class="grid g3">
+    <div class="card"><div class="kpi">Top 3</div><p>AWS, Azure et Google Cloud dominent le marché mondial des services d’infrastructure Cloud.</p></div>
+    <div class="card"><div class="kpi">≈ 2/3</div><p>Plusieurs analyses de marché 2025 situent leur poids cumulé autour de deux tiers du marché mondial.</p></div>
+    <div class="card"><div class="kpi">IA</div><p>La croissance récente est fortement tirée par l’IA, la donnée, les GPU, les plateformes d’agents et les services managés.</p></div>
+  </div>
+  <div class="warning"><strong>Point important :</strong> les parts de marché changent selon les cabinets, les périmètres et les trimestres. Pour un cours, il vaut mieux retenir la tendance : AWS reste très fort, Azure progresse fortement en entreprise, Google Cloud croît grâce à la donnée et l’IA.</div>
+</section>
+
+<section class="grid g3">
+  <article id="aws" class="card actor aws">
+    <div class="head"><h3>AWS – Amazon Web Services</h3></div>
+    <p><strong>Positionnement :</strong> pionnier du Cloud public moderne, très large catalogue de services, forte maturité IaaS/PaaS, énorme écosystème.</p>
+    <p><strong>Forces :</strong> richesse fonctionnelle, maturité, documentation, choix d’instances, services managés, réseau mondial, culture DevOps.</p>
+    <p><strong>Limites :</strong> complexité du catalogue, coûts parfois difficiles à anticiper, gouvernance indispensable, risque de dépendance fournisseur.</p>
+    <p><strong>Cas typiques :</strong> startup qui veut scaler vite, plateforme web mondiale, architecture serverless, data lake, IA, e-commerce, SaaS.</p>
+    <span class="tag">EC2</span><span class="tag">S3</span><span class="tag">Lambda</span><span class="tag">RDS</span><span class="tag">EKS</span><span class="tag">IAM</span>
+  </article>
+
+  <article id="azure" class="card actor azure">
+    <div class="head"><h3>Microsoft Azure</h3></div>
+    <p><strong>Positionnement :</strong> Cloud très présent dans les grandes entreprises, naturellement lié à Microsoft 365, Windows Server, Active Directory, SQL Server, .NET et GitHub.</p>
+    <p><strong>Forces :</strong> intégration entreprise, identité Entra ID, hybride/multicloud avec Azure Arc, sécurité, conformité, AKS, DevOps, liens Microsoft/OpenAI.</p>
+    <p><strong>Limites :</strong> portail parfois dense, nomenclature changeante, gouvernance à cadrer, coûts pouvant dériver sans FinOps.</p>
+    <p><strong>Cas typiques :</strong> SI d’entreprise Microsoft, migration d’applications .NET/SQL Server, environnement réglementé, stratégie hybride, DevOps Azure.</p>
+    <span class="tag">VM</span><span class="tag">Blob Storage</span><span class="tag">Functions</span><span class="tag">Azure SQL</span><span class="tag">AKS</span><span class="tag">Entra ID</span>
+  </article>
+
+  <article id="gcp" class="card actor gcp">
+    <div class="head"><h3>Google Cloud</h3></div>
+    <p><strong>Positionnement :</strong> Cloud très orienté data, analytics, Kubernetes, IA/ML et infrastructure issue de l’expérience Google.</p>
+    <p><strong>Forces :</strong> BigQuery, GKE, réseau mondial Google, Cloud Run, Vertex AI, approche développeur, data engineering.</p>
+    <p><strong>Limites :</strong> part de marché plus faible que AWS/Azure, moins dominant dans certains grands comptes historiques, écosystème parfois moins connu des équipes classiques SI.</p>
+    <p><strong>Cas typiques :</strong> analytics massif, IA/ML, conteneurs, applications cloud-native, startup orientée produit/data, plateforme événementielle.</p>
+    <span class="tag">Compute Engine</span><span class="tag">Cloud Storage</span><span class="tag">Cloud Run</span><span class="tag">BigQuery</span><span class="tag">GKE</span><span class="tag">Vertex AI</span>
+  </article>
+</section>
+
+<section id="equivalences" class="card">
+  <h2>3. Équivalences simples entre services</h2>
+  <p>Les noms changent, mais les grands besoins restent similaires : calcul, stockage, base de données, réseau, identité, conteneurs, serverless, supervision.</p>
+  <table>
+    <thead><tr><th>Besoin</th><th>AWS</th><th>Azure</th><th>Google Cloud</th><th>Idée à retenir</th></tr></thead>
+    <tbody>
+      <tr><td>Machine virtuelle</td><td>EC2</td><td>Azure Virtual Machines</td><td>Compute Engine</td><td>IaaS : on gère encore l’OS et beaucoup de configuration.</td></tr>
+      <tr><td>Stockage objet</td><td>S3</td><td>Blob Storage</td><td>Cloud Storage</td><td>Stocker des fichiers, sauvegardes, médias, exports, logs.</td></tr>
+      <tr><td>Base relationnelle managée</td><td>RDS / Aurora</td><td>Azure SQL / Database for PostgreSQL</td><td>Cloud SQL / AlloyDB</td><td>Le fournisseur gère une partie de l’exploitation.</td></tr>
+      <tr><td>Kubernetes managé</td><td>EKS</td><td>AKS</td><td>GKE</td><td>Standard cloud-native, mais pas forcément simple.</td></tr>
+      <tr><td>Fonctions serverless</td><td>Lambda</td><td>Azure Functions</td><td>Cloud Functions</td><td>On exécute du code sans gérer de serveur.</td></tr>
+      <tr><td>Conteneur serverless</td><td>ECS/Fargate</td><td>Container Apps</td><td>Cloud Run</td><td>Très utile pour déployer vite une API ou un microservice.</td></tr>
+      <tr><td>Identité & accès</td><td>IAM</td><td>Entra ID + RBAC</td><td>Cloud IAM</td><td>Sujet central : sécurité et responsabilité partagée.</td></tr>
+      <tr><td>Observabilité</td><td>CloudWatch</td><td>Azure Monitor</td><td>Cloud Monitoring</td><td>Sans logs, métriques et alertes, le Cloud devient opaque.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="tp" class="card">
+  <h2>4. TP étudiant – Choisir un fournisseur Cloud</h2>
+  <p>Durée conseillée : 35 à 45 minutes. Travail en binômes ou trinômes. Pour chaque scénario, choisissez un fournisseur principal et justifiez le choix.</p>
+
+  <div class="question"><a class="corrige-link" href="#corrige-s1">Voir corrigé</a><h3>Scénario 1 – PME déjà Microsoft</h3><p>Une PME utilise Microsoft 365, Teams, Windows Server, Active Directory et SQL Server. Elle veut migrer progressivement des applications internes.</p><strong>Question :</strong> quel Cloud recommander en première intention ? Pourquoi ?</div>
+
+  <div class="question"><a class="corrige-link" href="#corrige-s2">Voir corrigé</a><h3>Scénario 2 – Startup SaaS internationale</h3><p>Une startup veut lancer une application SaaS mondiale, scalable, avec beaucoup de services managés et une capacité à grandir vite.</p><strong>Question :</strong> quel Cloud recommander ? Quels risques anticiper ?</div>
+
+  <div class="question"><a class="corrige-link" href="#corrige-s3">Voir corrigé</a><h3>Scénario 3 – Projet data / analytics / IA</h3><p>Une entreprise collecte de gros volumes de données et veut construire une plateforme analytique avec tableaux de bord, ML et exploitation métier rapide.</p><strong>Question :</strong> quel Cloud paraît naturel ? Pourquoi ?</div>
+
+  <div class="question"><a class="corrige-link" href="#corrige-s4">Voir corrigé</a><h3>Scénario 4 – Application réglementée en France / Europe</h3><p>Une entreprise manipule des données sensibles et doit justifier résidence des données, sécurité, chiffrement, audit, contrôle des accès et coûts.</p><strong>Question :</strong> est-ce uniquement une question de fournisseur ?</div>
+</section>
+
+<section id="corrige" class="card">
+  <h2>5. Corrigés et pistes de réflexion</h2>
+  <div id="corrige-s1" class="answer"><h3>Corrigé scénario 1</h3><p><strong>Réponse attendue :</strong> Azure est le choix naturel en première intention. La raison n’est pas que les autres Clouds seraient incapables, mais que l’écosystème existant est déjà Microsoft : identité, postes, collaboration, Windows Server, SQL Server, outils d’administration et compétences internes.</p><p><strong>Piste pro :</strong> en migration réelle, on regarde aussi la dette applicative, les licences, l’hybridation, le réseau, les sauvegardes, la sécurité et l’industrialisation via IaC.</p></div>
+  <div id="corrige-s2" class="answer"><h3>Corrigé scénario 2</h3><p><strong>Réponse attendue :</strong> AWS est souvent très pertinent pour une startup SaaS mondiale grâce à son catalogue, sa maturité, son écosystème et sa scalabilité. Mais Azure ou Google Cloud peuvent aussi être pertinents selon les compétences, les services nécessaires et les partenariats.</p><p><strong>Risques :</strong> explosion des coûts, architecture trop complexe, dépendance fournisseur, sécurité mal cadrée, absence de supervision. Message DevOps : automatiser, mesurer, alerter, taguer les ressources, documenter.</p></div>
+  <div id="corrige-s3" class="answer"><h3>Corrigé scénario 3</h3><p><strong>Réponse attendue :</strong> Google Cloud est un candidat très naturel pour data/analytics/IA, notamment grâce à BigQuery, Vertex AI, GKE et l’héritage technique Google. AWS et Azure ont aussi des offres très solides, mais Google Cloud est souvent différenciant sur l’expérience data.</p><p><strong>Piste pro :</strong> le choix dépend aussi de l’endroit où sont déjà les données, du coût de transfert, de la gouvernance, de la conformité et des compétences data internes.</p></div>
+  <div id="corrige-s4" class="answer"><h3>Corrigé scénario 4</h3><p><strong>Réponse attendue :</strong> non, ce n’est pas uniquement une question de fournisseur. Les trois grands acteurs proposent régions, chiffrement, IAM, logs, certifications et services de sécurité. Le vrai sujet est l’architecture de gouvernance : choix de région, politique d’accès, chiffrement, réseau, sauvegarde, journalisation, conformité et contrôle des coûts.</p><p><strong>Piste pro :</strong> c’est là qu’interviennent les pratiques DevOps/IaC : policy as code, modules Terraform, landing zones, séparation des environnements, RBAC, monitoring, budgets et alerting.</p></div>
+</section>
+
+<section class="card">
+  <h2>6. Conclusion à donner aux étudiants</h2>
+  <p><strong>Formulation simple :</strong> “AWS, Azure et Google Cloud permettent tous de déployer des applications modernes. La vraie compétence n’est pas de réciter leurs noms de services, mais de comprendre les critères de choix : contexte métier, compétences, coûts, sécurité, données, réseau, conformité, automatisation et exploitation.”</p>
+  <div class="reflection"><strong>Lien avec l’expérience DevOps :</strong> dans la réalité, un Cloud mal gouverné devient vite coûteux et fragile. Terraform, CI/CD, supervision, sécurité et FinOps ne sont pas des bonus : ce sont les outils qui permettent d’utiliser le Cloud professionnellement.</div>
+</section>
+
+<section id="sources" class="card source">
+  <h2>7. Sources et lectures</h2>
+  <ul>
+    <li>AWS Global Infrastructure : <a href="https://aws.amazon.com/about-aws/global-infrastructure/" target="_blank" rel="noopener">infrastructure mondiale AWS</a>.</li>
+    <li>Microsoft Azure Global Infrastructure : <a href="https://azure.microsoft.com/en-us/explore/global-infrastructure/" target="_blank" rel="noopener">infrastructure mondiale Azure</a>.</li>
+    <li>Google Cloud Locations : <a href="https://cloud.google.com/about/locations" target="_blank" rel="noopener">régions et zones Google Cloud</a>.</li>
+    <li>Synergy Research / TechRadar : <a href="https://www.techradar.com/pro/global-cloud-wars-see-aws-increasingly-under-threat-from-microsoft-and-google" target="_blank" rel="noopener">évolution du marché Cloud 2025</a>.</li>
+    <li>ITPro / Omdia : <a href="https://www.itpro.com/cloud/cloud-computing/cloud-infrastructure-spending-hit-usd102-6-billion-in-q3-2025-and-aws-marked-its-strongest-performance-in-three-years" target="_blank" rel="noopener">dépenses cloud infrastructure Q3 2025</a>.</li>
+  </ul>
+  <p class="mini">Note pédagogique : les chiffres de marché sont des ordres de grandeur. Pour un cours, privilégier la compréhension des tendances et des critères de décision.</p>
+</section>
+
+<footer>Document généré pour 2CLD3 – complément après-midi. Usage recommandé : support de TP guidé, puis débrief collectif.</footer>
+</main>
+</body>
+</html>

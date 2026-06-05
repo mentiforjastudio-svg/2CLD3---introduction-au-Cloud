@@ -1,0 +1,20 @@
+# Dossier réservé au formateur (exclure entièrement)
+_FORMATEUR/
+
+# Répertoire des plugins Terraform (téléchargés via terraform init) - tous niveaux
+**/.terraform/
+
+# Fichier de verrouillage des versions (peut être versionné selon les préférences d'équipe)
+# **/.terraform.lock.hcl
+
+# État de l'infrastructure — contient des données sensibles, ne pas versionner
+**/terraform.tfstate
+**/terraform.tfstate.backup
+**/terraform.tfstate.*
+
+# Variables locales (peuvent contenir des secrets) - tous niveaux
+**/*.tfvars
+**/*.tfvars.json
+
+# Fichiers de plan Terraform - tous niveaux
+**/*.tfplan

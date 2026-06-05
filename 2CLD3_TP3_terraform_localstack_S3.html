@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2CLD3 – TP 3 : Déployer S3 avec Terraform et LocalStack</title>
+  <style>
+    :root {
+      --blue: #1a3a6b;
+      --blue2: #0b65c2;
+      --purple: #6d28d9;
+      --green: #1e8449;
+      --orange: #e67e22;
+      --bg: #f5f7fc;
+      --ink: #192030;
+      --muted: #5d6980;
+      --card: #ffffff;
+      --border: #dce6f2;
+      --ok: #eafaf1;
+      --warn: #fef9e7;
+      --tip: #eaf4ff;
+      --purple-light: #f3f0ff;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Segoe UI, Roboto, Arial, sans-serif; color: var(--ink); background: var(--bg); line-height: 1.6; }
+
+    header { background: linear-gradient(135deg, #1e1060, #6d28d9); color: white; padding: 44px 28px; }
+    header .wrap, main { max-width: 1050px; margin: auto; }
+    h1 { margin: 0; font-size: 2rem; }
+    .subtitle { font-size: 1.05rem; opacity: .9; margin-top: 8px; }
+    .pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+    .pill { background: #ffffff22; border: 1px solid #ffffff55; border-radius: 999px; padding: 5px 14px; font-size: .92rem; }
+
+    main { padding: 32px 28px; }
+    h2 { color: var(--blue); font-size: 1.5rem; border-left: 5px solid var(--purple); padding-left: 12px; margin-top: 36px; }
+    h3 { color: #0d2a5c; margin-top: 22px; font-size: 1.05rem; }
+
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px; margin: 18px 0; box-shadow: 0 2px 10px #1a3a6b0c; }
+
+    .step { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; margin: 14px 0; }
+    .step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .step-num { background: var(--purple); color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1rem; flex-shrink: 0; }
+    .step-title { font-weight: bold; color: var(--blue); font-size: 1.05rem; }
+
+    pre { background: #1e1a2e; color: #c8d8f0; padding: 14px 18px; border-radius: 10px; overflow-x: auto; margin: 10px 0; font-size: .9rem; line-height: 1.55; font-family: Consolas, 'Courier New', monospace; }
+    pre .comment { color: #7c6f9e; }
+    pre .key { color: #82aaff; }
+    pre .val { color: #c3e88d; }
+    pre .str { color: #f78c6c; }
+    code { background: #eaf1fb; color: #0d2a5c; padding: 2px 6px; border-radius: 5px; font-size: .92rem; font-family: Consolas, monospace; }
+
+    .info { background: var(--tip); border-left: 5px solid var(--blue2); border-radius: 10px; padding: 14px 18px; margin: 12px 0; }
+    .ok { background: var(--ok); border-left: 5px solid var(--green); border-radius: 10px; padding: 14px 18px; margin: 12px 0; }
+    .warn { background: var(--warn); border-left: 5px solid var(--orange); border-radius: 10px; padding: 14px 18px; margin: 12px 0; }
+    .iac { background: var(--purple-light); border-left: 5px solid var(--purple); border-radius: 10px; padding: 14px 18px; margin: 12px 0; }
+
+    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+    .compare-col { border-radius: 10px; padding: 16px; }
+    .compare-col.manual { background: #fff5f0; border: 1px solid #f0c0a0; }
+    .compare-col.iac { background: var(--purple-light); border: 1px solid #c4b5fd; }
+    .compare-col h4 { margin: 0 0 10px 0; font-size: .98rem; }
+    @media (max-width: 700px) { .compare { grid-template-columns: 1fr; } main { padding: 20px 14px; } }
+
+    .toc a { display: inline-block; margin: 4px 5px 4px 0; padding: 5px 10px; border: 1px solid var(--border); border-radius: 8px; text-decoration: none; color: var(--blue2); background: white; font-size: .9rem; }
+
+    .file-tree { background: #1e1a2e; color: #c8d8f0; padding: 14px 20px; border-radius: 10px; font-family: Consolas, monospace; font-size: .9rem; line-height: 1.8; margin: 10px 0; }
+    .file-tree .dir { color: #82aaff; }
+    .file-tree .file { color: #c3e88d; }
+    .file-tree .desc { color: #7c6f9e; }
+
+    .workflow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 16px 0; }
+    .wf-step { background: var(--purple); color: white; border-radius: 8px; padding: 8px 16px; font-weight: bold; font-size: .95rem; }
+    .wf-arrow { color: var(--purple); font-size: 1.4rem; font-weight: bold; }
+
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; margin: 12px 0; }
+    th, td { border: 1px solid var(--border); padding: 9px 12px; text-align: left; vertical-align: top; }
+    th { background: #f0ecff; color: var(--purple); }
+
+    .question { background: white; border: 2px dashed #a0b8d8; border-radius: 10px; padding: 16px 18px; margin: 16px 0; }
+    .answer { background: var(--ok); border-left: 5px solid var(--green); border-radius: 10px; padding: 16px 18px; margin: 14px 0; }
+
+    footer { margin-top: 40px; color: var(--muted); font-size: .88rem; text-align: center; padding-bottom: 32px; }
+    a { color: var(--blue2); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>TP 3 – Déployer un site S3 avec Terraform</h1>
+    <div class="subtitle">Le même site qu'en TP 2, mais en Infrastructure as Code. Une commande pour tout créer. Une commande pour tout supprimer.</div>
+    <div class="pills">
+      <span class="pill">⏱ 45–60 min</span>
+      <span class="pill">👥 Binômes</span>
+      <span class="pill">🟣 Terraform requis</span>
+      <span class="pill">🐳 LocalStack requis</span>
+      <span class="pill">📄 Prérequis : TP 2 réalisé</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<section class="card toc">
+  <strong>Navigation :</strong>
+  <a href="#contexte">Contexte</a>
+  <a href="#prerequis">1 · Prérequis</a>
+  <a href="#structure">2 · Structure du projet</a>
+  <a href="#provider">3 · Configurer le provider</a>
+  <a href="#resources">4 · Déclarer les ressources</a>
+  <a href="#workflow">5 · init → plan → apply</a>
+  <a href="#tester">6 · Tester</a>
+  <a href="#modifier">7 · Modifier et re-déployer</a>
+  <a href="#destroy">8 · Destroy</a>
+  <a href="#reflexion">Réflexion</a>
+  <a href="#corrige">Corrigé</a>
+  <a href="#aws-reel">☁️ Variante AWS réel</a>
+  <a href="#annexe-providers">📦 Annexe · Providers</a>
+</section>
+
+<!-- Contexte -->
+<section id="contexte">
+  <h2>Contexte – Pourquoi Terraform ?</h2>
+  <div class="card">
+    <p>En TP 2, tu as créé le bucket S3 à la main via l'interface web, puis uploadé les fichiers via la CLI. Ça fonctionne — mais imagine devoir refaire ça pour 10 environnements, ou expliquer à un collègue exactement ce que tu as configuré.</p>
+
+    <div class="compare">
+      <div class="compare-col manual">
+        <h4>🖱 TP 2 — Manuel</h4>
+        <ul style="margin:0; padding-left:18px">
+          <li>Clics dans l'interface web</li>
+          <li>Commandes CLI une par une</li>
+          <li>Non reproductible automatiquement</li>
+          <li>Difficile à versionner</li>
+          <li>Erreur possible à chaque étape</li>
+        </ul>
+      </div>
+      <div class="compare-col iac">
+        <h4>🟣 TP 3 — Terraform (IaC)</h4>
+        <ul style="margin:0; padding-left:18px">
+          <li>Infrastructure décrite dans des fichiers texte</li>
+          <li>Une commande pour tout créer</li>
+          <li>Reproductible à l'identique</li>
+          <li>Versionnable dans Git</li>
+          <li>Terraform vérifie avant d'agir</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="iac">
+      <strong>Infrastructure as Code (IaC) :</strong> l'idée est simple — décrire l'infrastructure souhaitée dans des fichiers, comme on écrit du code. Terraform lit ces fichiers et crée (ou modifie, ou supprime) les ressources pour correspondre à ce qui est décrit. Si le fichier ne change pas, Terraform ne fait rien.
+    </div>
+
+    <div class="workflow">
+      <div class="wf-step">terraform init</div>
+      <div class="wf-arrow">→</div>
+      <div class="wf-step">terraform plan</div>
+      <div class="wf-arrow">→</div>
+      <div class="wf-step">terraform apply</div>
+      <div class="wf-arrow">→</div>
+      <div class="wf-step">terraform destroy</div>
+    </div>
+    <p style="color:var(--muted); font-size:.93rem">Ce workflow en 4 commandes est le même en dev local, en CI/CD et en production.</p>
+  </div>
+</section>
+
+<!-- Prérequis -->
+<section id="prerequis">
+  <h2>1. Prérequis</h2>
+  <div class="card">
+    <ul>
+      <li><strong>Terraform installé</strong> — vérifier : <code>terraform --version</code></li>
+      <li><strong>LocalStack démarré</strong> avec le token en variable d'environnement (cf. TP 2)</li>
+      <li><strong>AWS CLI installée</strong> — vérifier : <code>aws --version</code></li>
+      <li><strong>Git installé</strong> et configuré avec le bon compte GitHub</li>
+    </ul>
+    <div class="iac">
+      <strong>Repo GitHub du TP :</strong> les fichiers de départ sont disponibles sur
+      <a href="https://github.com/mentiforjastudio-svg/2DLC-tp3-iac_cloud" target="_blank" rel="noopener">github.com/mentiforjastudio-svg/2DLC-tp3-iac_cloud</a>.<br><br>
+      Cloner le projet :
+      <pre style="margin: 8px 0 0">git clone https://github.com/mentiforjastudio-svg/2DLC-tp3-iac_cloud.git
+cd 2DLC-tp3-iac_cloud</pre>
+      Tu obtiens directement <code>main.tf</code>, <code>index.html</code> et <code>error.html</code> — prêts à l'emploi.
+    </div>
+    <div class="info">Terraform est déjà installé sur les postes. Si besoin sur une autre machine : <code>winget install HashiCorp.Terraform</code> (Windows) ou <code>brew install terraform</code> (macOS).</div>
+  </div>
+</section>
+
+<!-- Structure -->
+<section id="structure">
+  <h2>2. Structure du projet</h2>
+  <div class="card">
+    <p>Créer un nouveau dossier dédié à ce TP, par exemple <code>tp3-terraform-s3</code>, et y placer les fichiers suivants :</p>
+
+    <div class="file-tree">
+      <span class="dir">tp3-terraform-s3/</span><br>
+      ├── <span class="file">main.tf</span>         <span class="desc"># configuration Terraform (à créer)</span><br>
+      ├── <span class="file">index.html</span>      <span class="desc"># copié depuis le TP 2</span><br>
+      └── <span class="file">error.html</span>      <span class="desc"># copié depuis le TP 2</span>
+    </div>
+
+    <div class="info">
+      <strong>Convention Terraform :</strong> un projet minimal tient dans un seul fichier <code>main.tf</code>. En production, on sépare en <code>variables.tf</code>, <code>outputs.tf</code>, <code>providers.tf</code>… mais pour ce TP un seul fichier suffit et reste lisible.
+    </div>
+
+    <p>Après un <code>terraform init</code> et <code>terraform apply</code>, Terraform créera automatiquement :</p>
+    <div class="file-tree">
+      <span class="dir">tp3-terraform-s3/</span><br>
+      ├── <span class="file">main.tf</span><br>
+      ├── <span class="file">index.html</span><br>
+      ├── <span class="file">error.html</span><br>
+      ├── <span class="dir">.terraform/</span>              <span class="desc"># plugins téléchargés (ne pas versionner)</span><br>
+      ├── <span class="file">.terraform.lock.hcl</span>    <span class="desc"># versions verrouillées des providers</span><br>
+      └── <span class="file">terraform.tfstate</span>      <span class="desc"># état de l'infrastructure (ne pas supprimer !)</span>
+    </div>
+  </div>
+</section>
+
+<!-- Provider -->
+<section id="provider">
+  <h2>3. Configurer le provider AWS pour LocalStack</h2>
+  <div class="card">
+    <p>Créer le fichier <code>main.tf</code> et y coller le bloc suivant. C'est la configuration du <strong>provider</strong> — il indique à Terraform quel cloud cibler et comment s'y connecter.</p>
+
+    <pre><span class="comment"># main.tf — TP 3 : S3 Static Website via Terraform + LocalStack</span>
+
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "aws" {
+  <span class="comment"># Credentials fictives — LocalStack ne les vérifie pas</span>
+  access_key = "test"
+  secret_key = "test"
+  region     = "us-east-1"
+
+  <span class="comment"># Désactiver les vérifications AWS qui ne s'appliquent pas à LocalStack</span>
+  skip_credentials_validation = true
+  skip_metadata_api_check     = true
+  skip_requesting_account_id  = true
+
+  <span class="comment"># Forcer le style path pour S3 : localhost:4566/bucket (au lieu de bucket.localhost)</span>
+  s3_use_path_style = true
+
+  <span class="comment"># Pointer tous les appels S3 vers LocalStack</span>
+  endpoints {
+    s3 = "http://localhost:4566"
+  }
+}</pre>
+
+    <div class="warn">
+      <strong>Ces paramètres sont spécifiques à LocalStack.</strong> Sur AWS réel, on n'utilise jamais <code>access_key = "test"</code> ni <code>skip_credentials_validation</code>. Le provider détecterait automatiquement les credentials depuis les variables d'environnement ou les profils AWS CLI.
+    </div>
+
+    <div class="iac">
+      <strong>Qu'est-ce qu'un provider Terraform ?</strong> C'est un plugin qui sait parler à une API spécifique (AWS, Azure, GCP, GitHub, Kubernetes…). Le provider <code>hashicorp/aws</code> connaît toutes les ressources AWS et traduit le code HCL en appels d'API. Terraform le télécharge automatiquement lors du <code>terraform init</code>.
+    </div>
+  </div>
+</section>
+
+<!-- Ressources -->
+<section id="resources">
+  <h2>4. Déclarer les ressources S3</h2>
+  <div class="card">
+    <p>Ajouter à la suite du provider dans <code>main.tf</code> les trois ressources suivantes :</p>
+
+    <pre><span class="comment"># --- Ressource 1 : le bucket S3 ---</span>
+resource "aws_s3_bucket" "site" {
+  bucket = "mon-site-tf-demo"
+}
+
+<span class="comment"># --- Ressource 2 : le fichier index.html ---</span>
+resource "aws_s3_object" "index" {
+  bucket       = aws_s3_bucket.site.id   <span class="comment"># référence la ressource ci-dessus</span>
+  key          = "index.html"
+  source       = "${path.module}/index.html"
+  content_type = "text/html"
+  etag         = filemd5("${path.module}/index.html")  <span class="comment"># détecte les modifications</span>
+}
+
+<span class="comment"># --- Ressource 3 : le fichier error.html ---</span>
+resource "aws_s3_object" "error" {
+  bucket       = aws_s3_bucket.site.id
+  key          = "error.html"
+  source       = "${path.module}/error.html"
+  content_type = "text/html"
+  etag         = filemd5("${path.module}/error.html")
+}</pre>
+
+    <div class="info">
+      <strong>Points de syntaxe à retenir :</strong>
+      <ul style="margin: 6px 0 0 16px; padding:0">
+        <li><code>resource "type" "nom_local"</code> — le type est imposé par AWS, le nom local sert à référencer la ressource dans le reste du fichier</li>
+        <li><code>aws_s3_bucket.site.id</code> — référence la propriété <code>id</code> du bucket créé ci-dessus ; Terraform résout automatiquement les dépendances</li>
+        <li><code>etag = filemd5(...)</code> — calcule l'empreinte MD5 du fichier local ; si le fichier change, Terraform le détecte et re-uploade l'objet</li>
+        <li><code>${path.module}</code> — chemin du répertoire contenant le <code>main.tf</code></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Workflow -->
+<section id="workflow">
+  <h2>5. Le workflow Terraform : init → plan → apply</h2>
+  <div class="card">
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">1</div><div class="step-title">terraform init — initialiser le projet</div></div>
+      <p>Dans un terminal, se placer dans le dossier <code>tp3-terraform-s3</code> puis lancer :</p>
+      <pre>cd tp3-terraform-s3
+terraform init</pre>
+      <p>Terraform télécharge le provider <code>hashicorp/aws</code> et crée le dossier <code>.terraform/</code>. À ne faire <strong>qu'une fois</strong> par projet (ou après avoir modifié les providers).</p>
+      <div class="ok">Résultat attendu : <code>Terraform has been successfully initialized!</code></div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">2</div><div class="step-title">terraform plan — prévisualiser sans rien créer</div></div>
+      <pre>terraform plan</pre>
+      <p>Terraform compare l'état souhaité (le code) avec l'état réel (le <code>tfstate</code>, vide pour l'instant) et affiche ce qu'il <em>va</em> faire — sans le faire.</p>
+      <div class="ok">
+        Résultat attendu : 3 ressources à créer (<code>+ create</code>)
+        <pre style="margin:8px 0 0">Plan: 3 to add, 0 to change, 0 to destroy.</pre>
+      </div>
+      <div class="iac">C'est ici que réside la valeur du <strong>plan</strong> : en production, on fait toujours un plan avant d'appliquer — pour vérifier qu'on ne va pas détruire accidentellement quelque chose d'important.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">3</div><div class="step-title">terraform apply — créer les ressources</div></div>
+      <pre>terraform apply</pre>
+      <p>Terraform affiche à nouveau le plan et demande une confirmation. Taper <code>yes</code> pour confirmer.</p>
+      <pre>Do you want to perform these actions? (yes/no): yes</pre>
+      <div class="ok">
+        Résultat attendu :
+        <pre style="margin:8px 0 0">Apply complete! Resources: 3 added, 0 changed, 0 destroyed.</pre>
+      </div>
+      <div class="info">Pour éviter la confirmation interactive (utile en CI/CD) : <code>terraform apply -auto-approve</code>.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Tester -->
+<section id="tester">
+  <h2>6. Tester le résultat</h2>
+  <div class="card">
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">1</div><div class="step-title">Vérifier via le navigateur</div></div>
+      <p>Ouvrir dans le navigateur :</p>
+      <pre>https://localhost.localstack.cloud:4566/mon-site-tf-demo/index.html</pre>
+      <div class="ok">La même page qu'en TP 2 doit s'afficher — mais cette fois créée par Terraform.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">2</div><div class="step-title">Vérifier via le Resource Browser</div></div>
+      <p>Dans <a href="https://app.localstack.cloud" target="_blank" rel="noopener">app.localstack.cloud</a> → instance → S3 : le bucket <code>mon-site-tf-demo</code> doit être visible avec ses deux objets.</p>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">3</div><div class="step-title">Observer le fichier terraform.tfstate</div></div>
+      <p>Ouvrir le fichier <code>terraform.tfstate</code> dans un éditeur de texte. C'est un fichier JSON qui décrit exactement ce que Terraform sait avoir créé : le bucket, ses propriétés, les deux objets et leurs métadonnées.</p>
+      <div class="iac"><strong>Le tfstate est la mémoire de Terraform.</strong> Si on le supprime, Terraform ne sait plus que le bucket existe et tentera de tout recréer — même si le bucket existe déjà dans LocalStack. Ne jamais le supprimer manuellement.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Modifier -->
+<section id="modifier">
+  <h2>7. Modifier et re-déployer</h2>
+  <div class="card">
+    <p>C'est ici que l'IaC montre tout son intérêt. On va modifier <code>index.html</code> et observer comment Terraform détecte et applique le changement.</p>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">1</div><div class="step-title">Modifier index.html</div></div>
+      <p>Dans <code>index.html</code>, changer le titre ou la couleur de fond. Sauvegarder.</p>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">2</div><div class="step-title">Relancer terraform plan</div></div>
+      <pre>terraform plan</pre>
+      <p>Terraform calcule le nouveau MD5 du fichier, le compare à celui stocké dans le <code>tfstate</code>, et détecte que l'objet a changé.</p>
+      <div class="ok">
+        Résultat attendu :
+        <pre style="margin:8px 0 0">Plan: 0 to add, 1 to change, 0 to destroy.</pre>
+        Seul <code>index.html</code> est marqué <code>~ update in-place</code>.
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">3</div><div class="step-title">Appliquer et vérifier</div></div>
+      <pre>terraform apply</pre>
+      <p>Confirmer avec <code>yes</code>, puis recharger la page dans le navigateur. La modification s'affiche.</p>
+      <div class="iac">
+        <strong>Idempotence :</strong> si on relance <code>terraform apply</code> sans rien changer, Terraform répond <code>No changes. Infrastructure is up-to-date.</code> Il ne recrée pas ce qui existe déjà. C'est une propriété fondamentale de l'IaC — safe à rejouer autant de fois qu'on veut.
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Destroy -->
+<section id="destroy">
+  <h2>8. Nettoyer avec terraform destroy</h2>
+  <div class="card">
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">1</div><div class="step-title">Détruire toutes les ressources</div></div>
+      <pre>terraform destroy</pre>
+      <p>Terraform liste les ressources qu'il va supprimer et demande confirmation. Taper <code>yes</code>.</p>
+      <div class="ok">
+        Résultat attendu :
+        <pre style="margin:8px 0 0">Destroy complete! Resources: 3 destroyed.</pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">2</div><div class="step-title">Vérifier la suppression</div></div>
+      <p>Tenter d'accéder à <code>https://localhost.localstack.cloud:4566/mon-site-tf-demo/index.html</code> → le bucket n'existe plus, S3 retourne une erreur XML.</p>
+      <p>Vérifier aussi dans le Resource Browser : la liste des buckets est vide.</p>
+    </div>
+
+    <div class="warn">
+      <strong>Sur AWS réel</strong>, <code>terraform destroy</code> supprime <em>toutes</em> les ressources décrites dans le code — y compris des bases de données, des instances EC2, des données. Toujours vérifier le plan avant de confirmer, surtout en production. En environnement de TP ou de développement, c'est au contraire une commande précieuse pour ne pas oublier de ressources allumées.
+    </div>
+
+  </div>
+</section>
+
+<!-- Réflexion -->
+<section id="reflexion">
+  <h2>Réflexion – Ce que Terraform change vraiment</h2>
+  <div class="card">
+
+    <div class="question">
+      <h3>Question 1</h3>
+      <p>On a obtenu le même résultat qu'en TP 2 (bucket S3 + fichiers uploadés avec le bon Content-Type). Quelle est la différence fondamentale dans la <em>façon</em> d'y arriver ?</p>
+    </div>
+
+    <div class="question">
+      <h3>Question 2</h3>
+      <p>Dans le <code>main.tf</code>, la ressource <code>aws_s3_object.index</code> contient <code>bucket = aws_s3_bucket.site.id</code>. Qu'est-ce que ça implique pour l'ordre de création des ressources ? Est-ce qu'on a eu besoin de le préciser explicitement ?</p>
+    </div>
+
+    <div class="question">
+      <h3>Question 3</h3>
+      <p>Imagine qu'un collègue reprenne ce projet six mois plus tard. Qu'est-ce qu'il a besoin de faire pour recréer exactement la même infrastructure ? Compare avec ce qui aurait été nécessaire si on avait tout fait à la main (TP 2).</p>
+    </div>
+
+    <div class="question">
+      <h3>Question 4</h3>
+      <p>On a utilisé <code>access_key = "test"</code> dans le provider. Sur AWS réel, comment Terraform saurait-il quelles credentials utiliser sans les écrire en dur dans le code ?</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- Corrigé -->
+<section id="corrige">
+  <h2>Corrigé et pistes de réflexion</h2>
+
+  <div class="answer">
+    <h3>Question 1 – Différence fondamentale</h3>
+    <p>En TP 2, on a effectué des actions (clics, commandes) dans un ordre précis. En TP 3, on a <em>décrit un état souhaité</em> et Terraform a déterminé lui-même les actions à exécuter pour y arriver. C'est le passage du mode <strong>impératif</strong> ("faire X puis Y puis Z") au mode <strong>déclaratif</strong> ("voici ce que je veux, débrouille-toi"). La conséquence : le fichier <code>main.tf</code> est à la fois la documentation et le moyen de déploiement — il dit <em>quoi</em>, pas <em>comment</em>.</p>
+  </div>
+
+  <div class="answer">
+    <h3>Question 2 – Dépendances implicites</h3>
+    <p>En référençant <code>aws_s3_bucket.site.id</code>, Terraform sait que l'objet dépend du bucket. Il construira automatiquement un graphe de dépendances et créera le bucket <em>avant</em> les objets — sans qu'on ait eu à l'écrire explicitement. C'est une des forces de Terraform : les dépendances se déduisent des références. On peut aussi forcer une dépendance explicite avec <code>depends_on</code> si nécessaire.</p>
+  </div>
+
+  <div class="answer">
+    <h3>Question 3 – Reproductibilité</h3>
+    <p>Avec Terraform : <code>git clone</code> du projet + <code>terraform init</code> + <code>terraform apply</code>. Trois commandes, résultat identique garanti. Sans IaC : il faudrait un document de procédure (souvent incomplet ou obsolète), refaire chaque étape à la main, et espérer n'avoir rien oublié. C'est exactement pourquoi les équipes DevOps versionnent l'infrastructure dans Git avec l'application.</p>
+  </div>
+
+  <div class="answer">
+    <h3>Question 4 – Credentials en production</h3>
+    <p>Sur AWS réel, on ne met jamais les credentials en dur dans le code (risque de les commiter dans Git). Terraform les cherche dans l'ordre suivant : variables d'environnement (<code>AWS_ACCESS_KEY_ID</code>, <code>AWS_SECRET_ACCESS_KEY</code>), profils AWS CLI (<code>~/.aws/credentials</code>), rôle IAM attaché à la machine (en production sur EC2 ou en CI/CD). La bonne pratique est d'utiliser des rôles IAM — pas de secrets à gérer, rotation automatique.</p>
+  </div>
+
+</section>
+
+<!-- Récap -->
+<section class="card" style="background:#f7f0ff; border-color: var(--purple); margin-top: 28px;">
+  <h2 style="margin-top:0; border-color: var(--purple);">Récapitulatif — TP 2 vs TP 3</h2>
+  <table>
+    <thead><tr><th>Action</th><th>TP 2 (manuel)</th><th>TP 3 (Terraform)</th></tr></thead>
+    <tbody>
+      <tr><td>Créer le bucket</td><td>Interface web → formulaire → Submit</td><td>Déclaré dans <code>main.tf</code>, créé par <code>apply</code></td></tr>
+      <tr><td>Uploader avec Content-Type</td><td><code>aws s3 cp ... --content-type</code></td><td>Déclaré dans <code>aws_s3_object</code>, géré automatiquement</td></tr>
+      <tr><td>Re-déployer après modification</td><td>Re-lancer la commande CLI manuellement</td><td><code>terraform apply</code> — détecte et applique uniquement ce qui a changé</td></tr>
+      <tr><td>Supprimer</td><td>2 commandes CLI (rm + rb)</td><td><code>terraform destroy</code></td></tr>
+      <tr><td>Reproductible par un collègue</td><td>Non (sans procédure documentée)</td><td>Oui — <code>git clone</code> + <code>terraform apply</code></td></tr>
+      <tr><td>Versionnable dans Git</td><td>Non</td><td>Oui — <code>main.tf</code> est du texte</td></tr>
+    </tbody>
+  </table>
+  <div class="iac" style="margin-top:16px">
+    <strong>La suite logique :</strong> en B3, vous irez plus loin — variables Terraform, modules réutilisables, workspaces par environnement (dev/staging/prod), déploiement en CI/CD avec GitHub Actions. Le <code>main.tf</code> de ce TP est le point de départ de tout ça.
+  </div>
+</section>
+
+<!-- Variante AWS réel -->
+<section id="aws-reel">
+  <h2>☁️ Variante – Déployer sur AWS réel</h2>
+  <div class="card">
+    <p>Le TP complet a été réalisé sur LocalStack. Voici ce qui change pour déployer exactement la même infrastructure sur un vrai compte AWS.</p>
+
+    <h3>A. Configurer les credentials AWS</h3>
+    <p>Sur AWS réel, Terraform lit les credentials depuis les variables d'environnement ou le fichier de configuration AWS CLI. Ne jamais les écrire dans le code.</p>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">1</div><div class="step-title">Via variables d'environnement</div></div>
+      <pre># Windows PowerShell
+$env:AWS_ACCESS_KEY_ID     = "AKIAIOSFODNN7EXAMPLE"
+$env:AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+$env:AWS_DEFAULT_REGION    = "eu-west-3"
+
+# macOS / Linux
+export AWS_ACCESS_KEY_ID="AKIAIOSFODNN7EXAMPLE"
+export AWS_SECRET_ACCESS_KEY="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+export AWS_DEFAULT_REGION="eu-west-3"</pre>
+      <div class="info">Récupérer ces valeurs dans la console AWS : <strong>IAM → Users → ton utilisateur → Security credentials → Create access key</strong>.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">2</div><div class="step-title">Via AWS CLI (profil nommé — recommandé)</div></div>
+      <pre>aws configure --profile formation</pre>
+      <p>AWS CLI demande successivement : Access Key ID, Secret Access Key, région par défaut (<code>eu-west-3</code>), format de sortie (<code>json</code>).</p>
+      <p>Les credentials sont stockés dans <code>~/.aws/credentials</code>. Pour utiliser ce profil avec Terraform :</p>
+      <pre># Windows PowerShell
+$env:AWS_PROFILE = "formation"
+
+# macOS / Linux
+export AWS_PROFILE="formation"</pre>
+      <div class="ok">C'est la méthode recommandée : les credentials ne transitent jamais dans des variables ou des fichiers de code.</div>
+    </div>
+
+    <h3>B. Modifier le provider dans main.tf</h3>
+    <p>Remplacer le bloc <code>provider "aws"</code> du TP LocalStack par celui-ci :</p>
+    <pre>provider "aws" {
+  region = "eu-west-3"   # Paris — adapter selon le compte
+
+  # Pas de access_key / secret_key en dur
+  # Terraform les lit depuis les variables d'environnement
+  # ou depuis ~/.aws/credentials (profil AWS_PROFILE)
+
+  # Pas de skip_credentials_validation
+  # Pas de s3_use_path_style
+  # Pas de endpoints personnalisés
+}</pre>
+    <div class="warn">
+      <strong>Ne jamais committer des credentials AWS dans Git.</strong> Si <code>access_key</code> ou <code>secret_key</code> apparaissent dans un fichier versionné, GitHub les détecte et AWS les révoque automatiquement — mais le risque d'exploitation entre la création et la révocation est réel.
+    </div>
+
+    <h3>C. Nommage du bucket — contrainte de production</h3>
+    <p>Sur AWS réel, le nom du bucket doit être <strong>unique mondialement</strong>. <code>mon-site-tf-demo</code> est probablement déjà pris. Utiliser un nom suffisamment spécifique :</p>
+    <pre>resource "aws_s3_bucket" "site" {
+  bucket = "mon-site-tf-demo-2cld3-&lt;tes-initiales&gt;"
+}</pre>
+    <p>Mettre à jour le nom dans la ressource <code>aws_s3_object</code> et dans l'output <code>frontend_url</code> en conséquence.</p>
+
+    <h3>D. Accès public — étape supplémentaire sur AWS réel</h3>
+    <p>Contrairement à LocalStack, AWS bloque par défaut tout accès public. Il faut le désactiver explicitement dans Terraform, puis ajouter une Bucket Policy :</p>
+    <pre><span class="comment"># Désactiver le blocage des accès publics</span>
+resource "aws_s3_bucket_public_access_block" "site" {
+  bucket = aws_s3_bucket.site.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+<span class="comment"># Autoriser la lecture publique des objets</span>
+resource "aws_s3_bucket_policy" "site" {
+  bucket = aws_s3_bucket.site.id
+  depends_on = [aws_s3_bucket_public_access_block.site]
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = "*"
+      Action    = "s3:GetObject"
+      Resource  = "${aws_s3_bucket.site.arn}/*"
+    }]
+  })
+}</pre>
+
+    <h3>E. URL du site sur AWS réel</h3>
+    <p>Sur AWS réel, l'URL d'un objet S3 suit ce format :</p>
+    <pre>https://&lt;bucket-name&gt;.s3.&lt;region&gt;.amazonaws.com/index.html</pre>
+    <p>Ajouter cet output dans <code>main.tf</code> pour l'afficher après le déploiement :</p>
+    <pre>output "frontend_url_aws" {
+  value = "https://${aws_s3_bucket.site.bucket}.s3.${var.aws_region}.amazonaws.com/index.html"
+}</pre>
+
+    <h3>F. Tableau récapitulatif — LocalStack vs AWS réel</h3>
+    <table>
+      <thead><tr><th>Élément</th><th>LocalStack</th><th>AWS réel</th></tr></thead>
+      <tbody>
+        <tr><td>Credentials</td><td><code>access_key = "test"</code></td><td>Variables d'env ou profil AWS CLI</td></tr>
+        <tr><td><code>skip_credentials_validation</code></td><td><code>true</code></td><td>Ne pas mettre (comportement par défaut)</td></tr>
+        <tr><td><code>s3_use_path_style</code></td><td><code>true</code></td><td>Ne pas mettre</td></tr>
+        <tr><td><code>endpoints</code></td><td><code>s3 = "http://localhost:4566"</code></td><td>Ne pas mettre (AWS par défaut)</td></tr>
+        <tr><td>Blocage accès public</td><td>Non applicable</td><td><code>aws_s3_bucket_public_access_block</code> requis</td></tr>
+        <tr><td>Bucket policy</td><td>Non nécessaire</td><td><code>aws_s3_bucket_policy</code> requis</td></tr>
+        <tr><td>Nommage bucket</td><td>Local uniquement</td><td>Unique mondialement</td></tr>
+        <tr><td>URL frontend</td><td><code>localhost.localstack.cloud:4566/...</code></td><td><code>bucket.s3.region.amazonaws.com/...</code></td></tr>
+        <tr><td>Coût</td><td>Gratuit</td><td>Quelques centimes (Free Tier 12 mois)</td></tr>
+      </tbody>
+    </table>
+    <div class="iac">
+      <strong>Bonne pratique :</strong> en équipe, on sépare la configuration spécifique à l'environnement dans un fichier <code>terraform.tfvars</code> (non commité) ou via des <em>workspaces</em> Terraform. Le <code>main.tf</code> reste identique entre LocalStack et AWS réel — seules les variables changent.
+    </div>
+  </div>
+</section>
+
+<!-- Annexe providers -->
+<section id="annexe-providers">
+  <h2>📦 Annexe – Providers Terraform</h2>
+  <div class="card">
+    <p>Un <strong>provider</strong> est un plugin Terraform qui sait parler à une API spécifique. Il traduit les blocs <code>resource</code> du code HCL en appels d'API réels (AWS, Azure, GCP, GitHub, Kubernetes…). Terraform ne sait rien d'AWS nativement — c'est le provider <code>hashicorp/aws</code> qui contient toute la connaissance des ressources et de leurs paramètres.</p>
+
+    <h3>A. D'où viennent les providers ?</h3>
+    <p>Les providers sont publiés sur le <strong>Terraform Registry</strong> : <a href="https://registry.terraform.io" target="_blank" rel="noopener">registry.terraform.io</a>. Terraform les télécharge automatiquement lors du <code>terraform init</code> — aucune installation manuelle requise.</p>
+
+    <h3>B. Déclarer les providers requis</h3>
+    <p>Dans le bloc <code>terraform { required_providers { ... } }</code> en haut du <code>main.tf</code> :</p>
+    <pre>terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"   <span class="comment"># registre/auteur/nom</span>
+      version = "~> 5.0"          <span class="comment"># ~> 5.0 = >=5.0 et &lt;6.0</span>
+    }
+    archive = {
+      source  = "hashicorp/archive"
+      version = "~> 2.0"
+    }
+  }
+}</pre>
+    <div class="info">
+      <strong>Contraintes de version :</strong>
+      <ul style="margin:6px 0 0 16px; padding:0">
+        <li><code>~> 5.0</code> — versions 5.x uniquement (patch autorisé, majeur bloqué)</li>
+        <li><code>>= 5.0</code> — 5.0 ou supérieur, sans limite haute</li>
+        <li><code>= 5.3.0</code> — version exacte uniquement</li>
+        <li><code>> 5.0</code> — strictement supérieur à 5.0</li>
+      </ul>
+      La contrainte <code>~> 5.0</code> est recommandée : elle protège contre les breaking changes de version majeure tout en permettant les correctifs.
+    </div>
+
+    <h3>C. terraform init — téléchargement des providers</h3>
+    <pre>terraform init</pre>
+    <p>Cette commande :</p>
+    <ol>
+      <li>Lit le bloc <code>required_providers</code></li>
+      <li>Télécharge les plugins depuis registry.terraform.io dans <code>.terraform/providers/</code></li>
+      <li>Crée (ou met à jour) le fichier <code>.terraform.lock.hcl</code> qui verrouille les versions exactes</li>
+    </ol>
+    <div class="ok">
+      À relancer obligatoirement après avoir ajouté un nouveau provider ou modifié une contrainte de version.
+    </div>
+
+    <h3>D. Le fichier .terraform.lock.hcl</h3>
+    <p>Ce fichier est créé automatiquement par <code>terraform init</code>. Il verrouille les versions <em>exactes</em> des providers installés :</p>
+    <pre>provider "registry.terraform.io/hashicorp/aws" {
+  version     = "5.54.1"
+  constraints = "~> 5.0"
+  hashes = [
+    "h1:...",   <span class="comment"># empreinte pour vérification d'intégrité</span>
+  ]
+}</pre>
+    <div class="iac">
+      <strong>À committer dans Git</strong> (contrairement au dossier <code>.terraform/</code>). Il garantit que tous les membres de l'équipe utilisent exactement la même version du provider, évitant les différences de comportement entre machines.
+    </div>
+
+    <h3>E. Vérifier les providers installés</h3>
+    <pre>terraform providers</pre>
+    <p>Affiche l'arbre des providers requis par le projet courant et leurs sources.</p>
+    <pre>terraform version</pre>
+    <p>Affiche la version de Terraform ET la liste des providers actuellement installés dans <code>.terraform/</code>.</p>
+
+    <h3>F. Mettre à jour un provider</h3>
+    <pre>terraform init -upgrade</pre>
+    <p>Force la mise à jour vers la dernière version compatible avec la contrainte déclarée dans <code>required_providers</code>, et met à jour le <code>.terraform.lock.hcl</code>.</p>
+    <div class="warn">Ne pas confondre <code>terraform init -upgrade</code> (met à jour les providers) avec <code>terraform apply</code> (met à jour l'infrastructure). Ce sont deux niveaux distincts.</div>
+
+    <h3>G. Providers utilisés dans les TP</h3>
+    <table>
+      <thead><tr><th>Provider</th><th>Source</th><th>Utilisé dans</th><th>Rôle</th></tr></thead>
+      <tbody>
+        <tr><td><code>hashicorp/aws</code></td><td>registry.terraform.io</td><td>TP 3, TP 4</td><td>Crée toutes les ressources AWS (S3, Lambda, DynamoDB, API Gateway…)</td></tr>
+        <tr><td><code>hashicorp/archive</code></td><td>registry.terraform.io</td><td>TP 4</td><td>Crée des archives ZIP (pour packager le code Lambda)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</main>
+<footer>
+  Document 2CLD3 – TP 3 Terraform + LocalStack · Prérequis : TP 2 réalisé, Terraform installé, LocalStack démarré
+</footer>
+</body>
+</html>

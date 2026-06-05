@@ -1,0 +1,15 @@
+# Plugins Terraform
+.terraform/
+.terraform.lock.hcl
+
+# État de l'infrastructure
+terraform.tfstate
+terraform.tfstate.backup
+
+# Archives Lambda générées (recréées par terraform plan/apply)
+lambda/*.zip
+
+# Variables locales
+*.tfvars
+*.tfvars.json
+*.tfplan

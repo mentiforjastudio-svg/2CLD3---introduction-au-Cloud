@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2CLD3 – TP guidé : décisions Cloud en entreprise</title>
+<style>
+:root{--blue:#163d7a;--blue2:#0d5bb5;--light:#f4f8ff;--red:#e63865;--green:#2c7a3f;--amber:#8a5b00;--text:#182033;--muted:#5b6475;--border:#d7e2f2;--ok:#effaf1;--warn:#fff8e8;--answer:#f7fbff}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:#fff;line-height:1.55}main{max-width:1120px;margin:0 auto;padding:42px 28px 70px}h1{color:var(--blue);font-size:2rem;margin:0 0 8px;border-left:5px solid var(--red);padding-left:16px}h2{color:var(--blue);margin:34px 0 12px;font-size:1.45rem}h3{margin:18px 0 8px;color:#0f2f63}.lead{font-size:1.12rem;color:#30384a;margin-bottom:24px}.toc,.box,.case,.answer{border:1px solid var(--border);border-radius:14px;padding:18px;background:var(--light);box-shadow:0 2px 9px rgba(15,47,99,.06);margin:16px 0}.case{background:#fff}.answer{background:var(--answer);border-left:5px solid var(--blue2)}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.tag{display:inline-block;background:#eaf2ff;color:var(--blue);font-weight:bold;border-radius:20px;padding:3px 10px;margin:0 6px 8px 0;font-size:.86rem}.tag.green{background:#e9f7ee;color:var(--green)}.tag.warn{background:#fff3cf;color:var(--amber)}.task{border-left:4px solid var(--red);padding-left:12px;margin:14px 0}.expected{background:#fff;border:1px dashed #9eb8dc;border-radius:10px;padding:12px 14px;margin:12px 0}.note{color:var(--muted);font-size:.95rem}.correction-link{display:inline-block;margin-top:8px;background:var(--blue2);color:#fff;text-decoration:none;border-radius:8px;padding:7px 11px;font-weight:bold;font-size:.92rem}.correction-link:hover{background:#073f82;text-decoration:none}.source-link{color:var(--blue2);font-weight:bold}.takeaway{background:#fff4f7;border:1px solid #f0a6b8;border-radius:14px;padding:18px;margin-top:24px}.warnbox{background:var(--warn);border-color:#f0c36a}.okbox{background:var(--ok);border-color:#b7dfbf}table{border-collapse:collapse;width:100%;background:#fff;margin:10px 0}th,td{border:1px solid #d8e1ee;padding:9px;text-align:left;vertical-align:top}th{background:#eaf2ff;color:var(--blue)}code{background:#eef3fb;padding:2px 5px;border-radius:5px}.small{font-size:.92rem}.print-only{display:none}@media(max-width:780px){.grid{grid-template-columns:1fr}main{padding:26px 16px}h1{font-size:1.55rem}}@media print{body{font-size:12px}.case,.answer,.box{break-inside:avoid}a{color:#000;text-decoration:none}.correction-link{border:1px solid #000;background:#fff;color:#000}.print-only{display:block}main{max-width:none;padding:20px}}
+</style>
+</head>
+<body>
+<main>
+<h1>TP guidé – Comprendre les choix Cloud par des cas d’entreprise</h1>
+<p class="lead">Objectif : partir de cas réels pour comprendre pourquoi une entreprise choisit le Cloud, quel modèle elle privilégie, ce qu’elle gagne, et ce qu’elle doit apprendre à maîtriser.</p>
+
+<section class="box">
+<h2>Mode d’emploi étudiant</h2>
+<p>Pour chaque cas, lis le court contexte, réponds aux questions, puis consulte la correction. Les corrections ne sont pas seulement des “bonnes réponses” : elles donnent aussi les pistes de réflexion attendues en contexte professionnel.</p>
+<p><strong>Durée proposée :</strong> 60 à 90 minutes selon le niveau de détail attendu. <strong>Restitution :</strong> 3 minutes par groupe.</p>
+</section>
+
+<nav class="toc">
+<h2>Sommaire rapide</h2>
+<p><a href="#cas-netflix">Cas 1 – Netflix / AWS</a> · <a href="#cas-spotify">Cas 2 – Spotify / Google Cloud</a> · <a href="#cas-dropbox">Cas 3 – Dropbox / Magic Pocket</a> · <a href="#cas-capitalone">Cas 4 – Capital One / AWS</a> · <a href="#synthese">Synthèse</a></p>
+</nav>
+
+<section class="box">
+<h2>Rappel : les questions à se poser avant de choisir une solution Cloud</h2>
+<table>
+<tr><th>Question</th><th>Ce qu’elle permet d’évaluer</th></tr>
+<tr><td>Le besoin est-il standard ou spécifique ?</td><td>SaaS si le besoin est standard ; PaaS/IaaS si l’application doit être développée ou fortement contrôlée.</td></tr>
+<tr><td>Qui doit gérer la sécurité, l’OS, les sauvegardes, les logs ?</td><td>Le modèle de responsabilité partagée : plus on va vers SaaS, plus le fournisseur prend en charge les couches basses.</td></tr>
+<tr><td>L’entreprise cherche-t-elle surtout la vitesse, le contrôle, ou l’optimisation coût à grande échelle ?</td><td>Le Cloud n’est pas automatiquement moins cher ; il déplace le coût vers l’usage, l’exploitation et la gouvernance.</td></tr>
+<tr><td>L’entreprise possède-t-elle les compétences pour exploiter ce choix ?</td><td>Sans compétences DevOps, sécurité, observabilité et FinOps, le Cloud peut devenir un risque plutôt qu’un accélérateur.</td></tr>
+</table>
+</section>
+
+<section id="cas-netflix" class="case">
+<span class="tag">Scalabilité</span><span class="tag">Résilience</span><span class="tag">AWS</span><span class="tag green">Architecture distribuée</span>
+<h2>Cas 1 – Netflix : migrer vers AWS pour accompagner la croissance mondiale</h2>
+<p><strong>Contexte :</strong> Netflix s’appuyait historiquement sur une infrastructure classique en datacenter. Après un incident majeur de base de données en 2008 et avec la montée du streaming mondial, l’entreprise a engagé une migration massive vers AWS. La migration Cloud est généralement présentée comme terminée début 2016.</p>
+<p><strong>Sources à consulter :</strong> <a class="source-link" href="https://netflixtechblog.com/the-netflix-simian-army-16e57fbab116" target="_blank" rel="noopener">Netflix TechBlog – The Netflix Simian Army</a> ; <a class="source-link" href="https://aws.amazon.com/solutions/case-studies/netflix-case-study/" target="_blank" rel="noopener">AWS – Netflix Case Study</a> ; <a class="source-link" href="https://www.sei.cmu.edu/blog/devops-case-study-netflix-and-the-chaos-monkey/" target="_blank" rel="noopener">CMU SEI – Netflix and the Chaos Monkey</a>.</p>
+<div class="task">
+<p><strong>Questions étudiant</strong></p>
+<ol>
+<li>Quel problème métier Netflix cherchait-il à résoudre ?</li>
+<li>Pourquoi AWS était-il adapté à ce problème ?</li>
+<li>Qu’est-ce que Netflix gagne avec le Cloud ?</li>
+<li>Qu’est-ce que Netflix rend plus complexe en migrant vers le Cloud ?</li>
+</ol>
+<a class="correction-link" href="#rep-netflix">Voir la correction Netflix</a>
+</div>
+</section>
+
+<section id="cas-spotify" class="case">
+<span class="tag">Time-to-market</span><span class="tag">Google Cloud</span><span class="tag green">Data / Analytics</span>
+<h2>Cas 2 – Spotify : quitter ses datacenters pour se concentrer sur le produit</h2>
+<p><strong>Contexte :</strong> Spotify a annoncé en 2016 la migration de son backend vers Google Cloud. L’idée mise en avant : réduire l’effort consacré aux datacenters et accélérer le développement de fonctionnalités, notamment via les services de données et d’analyse.</p>
+<p><strong>Sources à consulter :</strong> <a class="source-link" href="https://cloud.google.com/customers/spotify" target="_blank" rel="noopener">Google Cloud – Spotify Case Study</a> ; <a class="source-link" href="https://engineering.atspotify.com/2019/12/views-from-the-cloud-a-history-of-spotifys-journey-to-the-cloud-part-1-2" target="_blank" rel="noopener">Spotify Engineering Blog – Journey to the Cloud (Part 1)</a>.</p>
+<div class="task">
+<p><strong>Questions étudiant</strong></p>
+<ol>
+<li>Pourquoi gérer ses propres datacenters peut-il devenir un frein ?</li>
+<li>Le choix de Spotify relève-t-il plutôt du IaaS, du PaaS, ou d’un mélange des deux ?</li>
+<li>Quels risques Spotify accepte-t-il en migrant vers Google Cloud ?</li>
+</ol>
+<a class="correction-link" href="#rep-spotify">Voir la correction Spotify</a>
+</div>
+</section>
+
+<section id="cas-dropbox" class="case">
+<span class="tag warn">Contre-exemple</span><span class="tag">Stockage massif</span><span class="tag green">Coûts unitaires</span>
+<h2>Cas 3 – Dropbox : sortir partiellement du Cloud quand l’échelle le justifie</h2>
+<p><strong>Contexte :</strong> Dropbox a longtemps utilisé Amazon S3 pour stocker les fichiers de ses utilisateurs, tout en gardant d’autres éléments en interne. À très grande échelle, l’entreprise a construit sa propre infrastructure de stockage, Magic Pocket, pour reprendre le contrôle sur la performance et les coûts unitaires.</p>
+<p><strong>Sources à consulter :</strong> <a class="source-link" href="https://dropbox.tech/infrastructure/magic-pocket-infrastructure" target="_blank" rel="noopener">Dropbox.Tech – Scaling to exabytes and beyond</a> ; <a class="source-link" href="https://www.infoq.com/news/2016/03/Dropbox-AWS/" target="_blank" rel="noopener">InfoQ – Dropbox Develops Magic Pocket, Moves Away From AWS</a> ; <a class="source-link" href="https://www.trgdatacenters.com/resource/dropbox-left-the-cloud-in-2015-and-never-went-back/" target="_blank" rel="noopener">TRG Datacenters – Dropbox Left the Cloud in 2015</a>.</p>
+<div class="task">
+<p><strong>Questions étudiant</strong></p>
+<ol>
+<li>Pourquoi Dropbox n’est-il pas un argument contre le Cloud pour toutes les entreprises ?</li>
+<li>À partir de quand une infrastructure interne peut-elle redevenir pertinente ?</li>
+<li>Pourquoi cette décision serait-elle risquée pour une PME ou une école ?</li>
+</ol>
+<a class="correction-link" href="#rep-dropbox">Voir la correction Dropbox</a>
+</div>
+</section>
+
+<section id="cas-capitalone" class="case">
+<span class="tag">Banque</span><span class="tag">AWS</span><span class="tag green">Gouvernance</span><span class="tag warn">FinOps</span>
+<h2>Cas 4 – Capital One : Cloud industriel, gouvernance et responsabilité</h2>
+<p><strong>Contexte :</strong> Capital One est un cas fort d’adoption AWS dans le secteur financier. L’entreprise communique sur la sortie de ses datacenters, l’accélération du provisioning, l’usage de services managés, l’observabilité, la résilience et la gouvernance.</p>
+<p><strong>Sources à consulter :</strong> <a class="source-link" href="https://aws.amazon.com/solutions/case-studies/innovators/capital-one/" target="_blank" rel="noopener">AWS – Capital One on AWS</a>.</p>
+<div class="task">
+<p><strong>Questions étudiant</strong></p>
+<ol>
+<li>Pourquoi le Cloud peut-il intéresser une banque, malgré les exigences de sécurité ?</li>
+<li>Quels sujets deviennent non négociables dans ce contexte ?</li>
+<li>Quel lien peut-on faire avec DevOps, Terraform et l’automatisation ?</li>
+</ol>
+<a class="correction-link" href="#rep-capitalone">Voir la correction Capital One</a>
+</div>
+</section>
+
+<section id="corrections" class="box">
+<h2>Corrections et pistes de réflexion</h2>
+<p class="note">Les réponses ci-dessous peuvent être affichées après un travail individuel ou de groupe. Elles peuvent aussi servir de support au formateur pour relancer la discussion.</p>
+</section>
+
+<section id="rep-netflix" class="answer">
+<h2>Correction – Netflix / AWS</h2>
+<p><strong>1. Problème métier :</strong> Netflix devait supporter une croissance rapide, mondiale, avec des pics de charge importants et une exigence forte de disponibilité. Un modèle datacenter classique devenait trop lent et trop rigide pour accompagner le passage massif au streaming.</p>
+<p><strong>2. Pourquoi AWS :</strong> AWS permettait de provisionner rapidement des ressources, d’expérimenter plus vite, de déployer dans une logique plus automatisée et de construire une architecture distribuée. Le Cloud convenait particulièrement à une activité avec charges variables et croissance difficile à prévoir.</p>
+<p><strong>3. Gains :</strong> élasticité, vitesse de déploiement, capacité à expérimenter, meilleure tolérance aux pannes si l’architecture est bien conçue, responsabilisation des équipes produit et plateforme.</p>
+<p><strong>4. Complexités :</strong> architecture distribuée, supervision plus exigeante, coûts variables à surveiller, sécurité Cloud, dépendance fournisseur, conception pour la panne. Le Cloud ne supprime pas la complexité : il la déplace vers l’architecture et l’exploitation.</p>
+<div class="expected"><strong>Piste de réflexion professionnelle :</strong> Netflix n’a pas juste “loué des serveurs”. L’entreprise a changé sa manière de concevoir les applications : microservices, automatisation, chaos engineering, observabilité, déploiement continu.</div>
+<p><a class="correction-link" href="#cas-netflix">Retour au cas Netflix</a></p>
+</section>
+
+<section id="rep-spotify" class="answer">
+<h2>Correction – Spotify / Google Cloud</h2>
+<p><strong>1. Pourquoi les datacenters deviennent un frein :</strong> acheter du matériel, prévoir la capacité, gérer le renouvellement, le réseau, les incidents et les salles machines mobilise des équipes qui pourraient travailler sur le produit. Pour une entreprise numérique, cela peut ralentir le time-to-market.</p>
+<p><strong>2. IaaS, PaaS ou mélange :</strong> c’est un mélange. La partie infrastructure de Google Cloud relève du IaaS, mais l’intérêt majeur vient souvent des services managés : data, analytics, bases managées, pipelines, outils d’exploitation. C’est là que l’on se rapproche du PaaS.</p>
+<p><strong>3. Risques acceptés :</strong> dépendance à Google Cloud, migration longue et complexe, adaptation des architectures, maîtrise des coûts, gestion de la sécurité dans un modèle partagé, et dépendance à la disponibilité de services tiers.</p>
+<div class="expected"><strong>Piste de réflexion professionnelle :</strong> le vrai arbitrage n’est pas “Cloud ou pas Cloud”, mais “où veut-on mettre l’énergie des ingénieurs ?” Sur l’infrastructure de base, ou sur la valeur produit ?</div>
+<p><a class="correction-link" href="#cas-spotify">Retour au cas Spotify</a></p>
+</section>
+
+<section id="rep-dropbox" class="answer">
+<h2>Correction – Dropbox / Magic Pocket</h2>
+<p><strong>1. Pas un argument contre le Cloud :</strong> Dropbox est un cas très spécifique : stockage massif, volumétrie gigantesque, compétences internes élevées, capacité à construire matériel, logiciel, réseau et procédures d’exploitation. Ce n’est pas la situation d’une PME classique.</p>
+<p><strong>2. Quand l’interne redevient pertinent :</strong> lorsque l’échelle est énorme, que le besoin est très stable, que les coûts unitaires sont critiques, et que l’entreprise peut optimiser toute la chaîne technique mieux qu’un fournisseur généraliste.</p>
+<p><strong>3. Risque pour une PME ou une école :</strong> coûts initiaux élevés, manque de compétences, sécurité plus difficile à assurer, faible capacité d’astreinte, matériel à renouveler, sauvegardes, PRA/PCA, supervision. Le Cloud permet justement d’éviter cette charge dans beaucoup de cas.</p>
+<div class="expected"><strong>Piste de réflexion professionnelle :</strong> Dropbox montre que le Cloud est un choix économique et stratégique. Il faut comparer coût, contrôle, compétences, risques et échelle. “Revenir on-premise” n’est pertinent que si l’on a une raison solide et les moyens de l’assumer.</div>
+<p><a class="correction-link" href="#cas-dropbox">Retour au cas Dropbox</a></p>
+</section>
+
+<section id="rep-capitalone" class="answer">
+<h2>Correction – Capital One / AWS</h2>
+<p><strong>1. Pourquoi une banque va vers le Cloud :</strong> pour accélérer le provisioning, améliorer la résilience, accéder à des services avancés, standardiser les pratiques, industrialiser l’observabilité et réduire la dépendance aux datacenters historiques.</p>
+<p><strong>2. Sujets non négociables :</strong> sécurité, conformité, gestion des identités, chiffrement, traçabilité, journalisation, séparation des environnements, contrôle des coûts, gouvernance des comptes, gestion des accès et auditabilité.</p>
+<p><strong>3. Lien avec DevOps / Terraform :</strong> l’automatisation permet de rendre les déploiements reproductibles et contrôlables. Terraform ou des outils équivalents servent à versionner l’infrastructure, standardiser les environnements, auditer les changements et limiter les actions manuelles non maîtrisées.</p>
+<div class="expected"><strong>Piste de réflexion professionnelle :</strong> dans une grande entreprise, le Cloud n’est acceptable que s’il est gouverné. DevOps ne veut pas dire “chacun fait ce qu’il veut”, mais “les équipes livrent plus vite dans un cadre automatisé, mesurable et sécurisé”.</div>
+<p><a class="correction-link" href="#cas-capitalone">Retour au cas Capital One</a></p>
+</section>
+
+<section id="synthese" class="takeaway">
+<h2>Synthèse à retenir</h2>
+<table>
+<tr><th>Cas</th><th>Leçon principale</th><th>Modèle Cloud dominant</th></tr>
+<tr><td>Netflix</td><td>Le Cloud permet d’absorber croissance, variabilité et disponibilité, mais exige une architecture pensée pour la panne.</td><td>IaaS + services managés + culture cloud-native</td></tr>
+<tr><td>Spotify</td><td>Le Cloud permet de réorienter les équipes vers le produit et les données plutôt que vers les datacenters.</td><td>IaaS + PaaS / services managés</td></tr>
+<tr><td>Dropbox</td><td>À très grande échelle, certaines entreprises peuvent optimiser mieux qu’un fournisseur Cloud généraliste.</td><td>Hybride puis infrastructure interne spécialisée</td></tr>
+<tr><td>Capital One</td><td>Dans les secteurs régulés, le Cloud est possible si gouvernance, sécurité, conformité et automatisation sont solides.</td><td>AWS industriel, gouverné, automatisé</td></tr>
+</table>
+<p><strong>Conclusion :</strong> le bon choix Cloud dépend du problème métier, du niveau de contrôle souhaité, de l’échelle, des compétences internes, de la sécurité attendue et du coût total. Le rôle d’un professionnel DevOps/Cloud est de rendre ce choix exploitable, reproductible et gouverné.</p>
+</section>
+
+<section class="box okbox">
+<h2>Mini-atelier final – Choisir une stratégie Cloud</h2>
+<p><strong>Scénario :</strong> une école veut publier une application web de suivi pédagogique pour 2 000 étudiants. Elle veut aller vite, limiter les coûts, rester sécurisée et pouvoir faire évoluer l’application.</p>
+<p><strong>Travail attendu :</strong> choisir IaaS, PaaS, SaaS ou hybride, puis justifier le choix en 5 critères : vitesse, coût, sécurité, maintenance, évolutivité.</p>
+<p><strong>Correction type :</strong> pour une application développée spécifiquement, le PaaS ou une plateforme managée est souvent le meilleur compromis : déploiement rapide, peu de gestion système, montée en charge plus simple, coût initial limité. Le SaaS serait pertinent si un outil existant répond déjà au besoin. L’IaaS serait utile si l’école a des contraintes fortes sur l’OS, le réseau ou la migration d’une application existante.</p>
+</section>
+
+<section class="box warnbox">
+<h2>Note formateur – lien avec ton expérience professionnelle</h2>
+<p>Tu peux conclure ainsi : “Dans mes missions Azure / Terraform / DevOps, le sujet n’est pas seulement de créer des ressources Cloud. Le vrai travail consiste à rendre l’infrastructure fiable, reproductible, sécurisée, lisible et maîtrisée dans le temps.”</p>
+<p>Cette phrase relie directement le cours d’introduction aux notions qui viendront ensuite : CI/CD, Infrastructure as Code, environnements, gouvernance, observabilité, tests et maîtrise des coûts.</p>
+</section>
+
+<section class="box small">
+<h2>Sources</h2>
+<ul>
+<li>Netflix TechBlog – The Netflix Simian Army : <a href="https://netflixtechblog.com/the-netflix-simian-army-16e57fbab116" target="_blank" rel="noopener">netflixtechblog.com/the-netflix-simian-army-16e57fbab116</a></li>
+<li>AWS – Netflix Case Study : <a href="https://aws.amazon.com/solutions/case-studies/netflix-case-study/" target="_blank" rel="noopener">aws.amazon.com/solutions/case-studies/netflix-case-study</a></li>
+<li>CMU SEI – DevOps Case Study: Netflix and the Chaos Monkey : <a href="https://www.sei.cmu.edu/blog/devops-case-study-netflix-and-the-chaos-monkey/" target="_blank" rel="noopener">sei.cmu.edu/blog/devops-case-study-netflix-and-the-chaos-monkey</a></li>
+<li>Google Cloud – Spotify Case Study : <a href="https://cloud.google.com/customers/spotify" target="_blank" rel="noopener">cloud.google.com/customers/spotify</a></li>
+<li>Spotify Engineering Blog – Views From The Cloud (Part 1) : <a href="https://engineering.atspotify.com/2019/12/views-from-the-cloud-a-history-of-spotifys-journey-to-the-cloud-part-1-2" target="_blank" rel="noopener">engineering.atspotify.com – Journey to the Cloud</a></li>
+<li>Dropbox.Tech – Scaling to exabytes and beyond : <a href="https://dropbox.tech/infrastructure/magic-pocket-infrastructure" target="_blank" rel="noopener">dropbox.tech/infrastructure/magic-pocket-infrastructure</a></li>
+<li>InfoQ – Dropbox Develops Magic Pocket, Moves Away From AWS : <a href="https://www.infoq.com/news/2016/03/Dropbox-AWS/" target="_blank" rel="noopener">infoq.com/news/2016/03/Dropbox-AWS</a></li>
+<li>AWS – Capital One on AWS : <a href="https://aws.amazon.com/solutions/case-studies/innovators/capital-one/" target="_blank" rel="noopener">aws.amazon.com/solutions/case-studies/innovators/capital-one</a></li>
+</ul>
+</section>
+</main>
+</body>
+</html>

@@ -1,0 +1,765 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2CLD3 – TP après-midi : S3 Static Website avec LocalStack</title>
+  <style>
+    :root {
+      --blue: #1a3a6b;
+      --blue2: #0b65c2;
+      --orange: #e67e22;
+      --green: #1e8449;
+      --bg: #f5f7fc;
+      --ink: #192030;
+      --muted: #5d6980;
+      --card: #ffffff;
+      --border: #dce6f2;
+      --ok: #eafaf1;
+      --warn: #fef9e7;
+      --tip: #eaf4ff;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Segoe UI, Roboto, Arial, sans-serif; color: var(--ink); background: var(--bg); line-height: 1.6; }
+
+    header { background: linear-gradient(135deg, #0d1f4a, #0b65c2); color: white; padding: 44px 28px; }
+    header .wrap, main { max-width: 1050px; margin: auto; }
+    h1 { margin: 0; font-size: 2rem; }
+    .subtitle { font-size: 1.05rem; opacity: .9; margin-top: 8px; }
+    .pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+    .pill { background: #ffffff22; border: 1px solid #ffffff55; border-radius: 999px; padding: 5px 14px; font-size: .92rem; }
+
+    main { padding: 32px 28px; }
+    h2 { color: var(--blue); font-size: 1.5rem; border-left: 5px solid var(--orange); padding-left: 12px; margin-top: 36px; }
+    h3 { color: #0d2a5c; margin-top: 22px; font-size: 1.05rem; }
+
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px; margin: 18px 0; box-shadow: 0 2px 10px #1a3a6b0c; }
+
+    /* Étapes numérotées */
+    .step { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; margin: 14px 0; }
+    .step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .step-num { background: var(--blue2); color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1rem; flex-shrink: 0; }
+    .step-title { font-weight: bold; color: var(--blue); font-size: 1.05rem; }
+
+    /* Commandes */
+    pre { background: #1e2a3a; color: #c8d8f0; padding: 14px 18px; border-radius: 10px; overflow-x: auto; margin: 10px 0; font-size: .9rem; line-height: 1.55; font-family: Consolas, 'Courier New', monospace; }
+    code { background: #eaf1fb; color: #0d2a5c; padding: 2px 6px; border-radius: 5px; font-size: .92rem; font-family: Consolas, monospace; }
+
+    /* Boîtes colorées */
+    .info { background: var(--tip); border-left: 5px solid var(--blue2); border-radius: 10px; padding: 14px 18px; margin: 12px 0; }
+    .ok { background: var(--ok); border-left: 5px solid var(--green); border-radius: 10px; padding: 14px 18px; margin: 12px 0; }
+    .warn { background: var(--warn); border-left: 5px solid var(--orange); border-radius: 10px; padding: 14px 18px; margin: 12px 0; }
+    .diff { background: #fff0f5; border-left: 5px solid #c0392b; border-radius: 10px; padding: 14px 18px; margin: 12px 0; }
+
+    .question { background: white; border: 2px dashed #a0b8d8; border-radius: 10px; padding: 16px 18px; margin: 16px 0; }
+    .answer { background: var(--ok); border-left: 5px solid var(--green); border-radius: 10px; padding: 16px 18px; margin: 14px 0; }
+
+    /* Comparaison */
+    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+    .compare-col { border-radius: 10px; padding: 16px; }
+    .compare-col.real { background: #fff5f0; border: 1px solid #f0c0a0; }
+    .compare-col.local { background: #f0f8f0; border: 1px solid #a0c8a0; }
+    .compare-col h4 { margin: 0 0 10px 0; font-size: .98rem; }
+    @media (max-width: 700px) { .compare { grid-template-columns: 1fr; } main { padding: 20px 14px; } }
+
+    /* TOC */
+    .toc a { display: inline-block; margin: 4px 5px 4px 0; padding: 5px 10px; border: 1px solid var(--border); border-radius: 8px; text-decoration: none; color: var(--blue2); background: white; font-size: .9rem; }
+
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; margin: 12px 0; }
+    th, td { border: 1px solid var(--border); padding: 9px 12px; text-align: left; vertical-align: top; }
+    th { background: #eaf2fb; color: var(--blue); }
+
+    footer { margin-top: 40px; color: var(--muted); font-size: .88rem; text-align: center; padding-bottom: 32px; }
+    a { color: var(--blue2); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>TP après-midi – Héberger un site statique sur S3 avec LocalStack</h1>
+    <div class="subtitle">L'Option 2 du TP Jour 1 (AWS S3 Static Website), sans compte AWS, entièrement en local.</div>
+    <div class="pills">
+      <span class="pill">⏱ 60–75 min</span>
+      <span class="pill">👥 Binômes</span>
+      <span class="pill">🐳 Docker Desktop requis</span>
+      <span class="pill">🖥 app.localstack.cloud</span>
+      <span class="pill">💶 Gratuit — aucun compte AWS</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<section class="card toc">
+  <strong>Navigation :</strong>
+  <a href="#contexte">Contexte</a>
+  <a href="#install">1 · Prérequis</a>
+  <a href="#demarrage">2 · Démarrer LocalStack</a>
+  <a href="#interface">3 · Interface web</a>
+  <a href="#bucket">4 · Créer le bucket</a>
+  <a href="#upload">5 · Uploader les fichiers</a>
+  <a href="#tester">6 · Tester</a>
+  <a href="#indices">Indices</a>
+  <a href="#corrige">Corrigé</a>
+  <a href="#annexe">📦 Annexe 1 · Installation</a>
+  <a href="#annexe2">🧹 Annexe 2 · Nettoyage</a>
+</section>
+
+<!-- Contexte -->
+<section id="contexte">
+  <h2>Contexte</h2>
+  <div class="card">
+    <p>Dans le cours du matin, le TP proposait deux options pour déployer une application web :</p>
+    <ul>
+      <li><strong>Option 1</strong> : Vercel — rapide, sans infrastructure à gérer</li>
+      <li><strong>Option 2</strong> : AWS S3 Static Website — plus proche du monde professionnel, mais nécessite un compte AWS réel</li>
+    </ul>
+    <p>Aujourd'hui on réalise l'<strong>Option 2 en local</strong> grâce à <strong>LocalStack</strong>, un outil qui émule les services AWS sur ta machine. Même workflow, mêmes concepts, mêmes API — mais zéro compte AWS, zéro risque de coût, tout en local.</p>
+
+    <div class="compare">
+      <div class="compare-col real">
+        <h4>☁️ AWS réel (Option 2 originale)</h4>
+        <ul style="margin:0; padding-left:18px">
+          <li>Compte AWS requis (carte bancaire)</li>
+          <li>Bucket créé sur les serveurs Amazon</li>
+          <li>URL publique mondiale</li>
+          <li>Facturation à l'usage</li>
+          <li>12 mois gratuits (Free Tier)</li>
+        </ul>
+      </div>
+      <div class="compare-col local">
+        <h4>🖥 LocalStack (ce TP)</h4>
+        <ul style="margin:0; padding-left:18px">
+          <li>Aucun compte AWS</li>
+          <li>Bucket créé sur ta machine (Docker)</li>
+          <li>URL locale : <code>localhost.localstack.cloud:4566</code></li>
+          <li>Totalement gratuit, sans limite</li>
+          <li>Identique à 95% à AWS réel</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="info">
+      <strong>Ce que tu vas apprendre :</strong> créer un bucket S3, désactiver le blocage des accès publics, activer le Static Website Hosting, uploader des fichiers HTML/CSS, et accéder au site via son URL. Ce sont exactement les étapes d'un déploiement S3 professionnel.
+    </div>
+  </div>
+</section>
+
+<!-- Installation -->
+<section id="install">
+  <h2>1. Prérequis</h2>
+  <div class="card">
+    <p>Avant de commencer ce TP, les éléments suivants doivent être en place :</p>
+    <ul>
+      <li><strong>Docker Desktop</strong> installé et démarré (icône baleine visible dans la barre des tâches)</li>
+      <li><strong>Un compte LocalStack</strong> gratuit (plan Hobby) créé sur <a href="https://app.localstack.cloud/sign-up" target="_blank" rel="noopener">app.localstack.cloud</a></li>
+      <li><strong>Un Auth Token LocalStack</strong> récupéré dans Workspace → Auth Tokens</li>
+      <li><strong>La variable d'environnement</strong> <code>LOCALSTACK_AUTH_TOKEN</code> définie dans ton terminal</li>
+    </ul>
+    <div class="info">
+      👉 Si l'un de ces points n'est pas encore fait, se reporter à l'<a href="#annexe"><strong>Annexe – Installation de l'environnement</strong></a> en début de document. Elle couvre Windows, macOS et Linux, avec les commandes de vérification et la résolution des problèmes courants.
+    </div>
+  </div>
+</section>
+
+<!-- Démarrage LocalStack -->
+<section id="demarrage">
+  <h2>2. Démarrer LocalStack</h2>
+  <div class="card">
+    <p>Si ce n'est pas déjà fait, définir d'abord la variable d'environnement avec ton token (voir Annexe B) :</p>
+    <pre># Windows PowerShell
+$env:LOCALSTACK_AUTH_TOKEN = "ls-XXXXX"
+
+# macOS / Linux
+export LOCALSTACK_AUTH_TOKEN="ls-XXXXX"</pre>
+    <p>Puis lancer LocalStack — Docker lit automatiquement la variable depuis ton environnement :</p>
+    <pre>docker run --rm -p 4566:4566 -e LOCALSTACK_AUTH_TOKEN localstack/localstack</pre>
+    <div class="info">Le <code>-e LOCALSTACK_AUTH_TOKEN</code> sans valeur explicite dit à Docker : <em>"prends la valeur depuis l'environnement du host"</em>. Le token ne s'affiche nulle part dans la commande.</div>
+
+    <div class="info">
+      <strong>Que fait cette commande ?</strong>
+      <ul style="margin: 6px 0 0 16px; padding: 0;">
+        <li><code>-p 4566:4566</code> : expose le port 4566 (point d'entrée unique de tous les services AWS émulés)</li>
+        <li><code>-e LOCALSTACK_AUTH_TOKEN</code> : sans <code>=</code>, Docker lit directement la variable d'environnement du host qui porte <em>exactement</em> ce nom et l'injecte dans le conteneur — le token ne s'écrit nulle part dans la commande</li>
+        <li><code>localstack/localstack</code> : l'image Docker officielle LocalStack</li>
+      </ul>
+    </div>
+
+    <div class="ok">
+      <strong>LocalStack est prêt quand les logs affichent :</strong>
+      <pre style="margin: 8px 0 0">Ready.</pre>
+      Premier démarrage = téléchargement de l'image (~600 Mo), peut prendre 1–2 min.
+    </div>
+
+    <div class="warn">
+      <strong>Important :</strong> laisser ce terminal ouvert pendant tout le TP. LocalStack s'arrête si on ferme le terminal ou si on fait <code>Ctrl+C</code>.
+    </div>
+
+    <h3>Cas multi-comptes : choisir explicitement quel token utiliser</h3>
+    <p>Si tu as plusieurs comptes LocalStack (par exemple un compte formation, un compte perso, un compte client), nomme tes variables pour les distinguer :</p>
+    <pre># Windows PowerShell — définir plusieurs tokens
+$env:LOCALSTACK_TOKEN_FORMATION = "ls-XXXXX"   # compte formation
+$env:LOCALSTACK_TOKEN_PERSO     = "ls-YYYYY"   # compte personnel
+$env:LOCALSTACK_TOKEN_CLIENT    = "ls-ZZZZZ"   # compte client
+
+# macOS / Linux
+export LOCALSTACK_TOKEN_FORMATION="ls-XXXXX"
+export LOCALSTACK_TOKEN_PERSO="ls-YYYYY"
+export LOCALSTACK_TOKEN_CLIENT="ls-ZZZZZ"</pre>
+    <p>Puis passer explicitement le token voulu au lancement :</p>
+    <pre># Windows PowerShell — lancer avec le token "formation"
+docker run --rm -p 4566:4566 -e LOCALSTACK_AUTH_TOKEN=$env:LOCALSTACK_TOKEN_FORMATION localstack/localstack
+
+# macOS / Linux
+docker run --rm -p 4566:4566 -e LOCALSTACK_AUTH_TOKEN=$LOCALSTACK_TOKEN_FORMATION localstack/localstack</pre>
+    <div class="info">
+      C'est la seule situation où l'on met une valeur explicite après le <code>=</code> dans <code>-e</code> — et cette valeur est une <strong>variable</strong>, jamais le token brut écrit en clair.
+    </div>
+
+    <h3>Vérification</h3>
+    <p>Dans un <em>autre</em> terminal, tester :</p>
+    <pre>curl http://localhost:4566/_localstack/health</pre>
+    <p>On doit obtenir une réponse JSON avec <code>"running": true</code>.</p>
+  </div>
+</section>
+
+<!-- Interface web -->
+<section id="interface">
+  <h2>3. Ouvrir l'interface web</h2>
+  <div class="card">
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">1</div><div class="step-title">Aller sur app.localstack.cloud</div></div>
+      <p>Dans le navigateur, ouvrir <a href="https://app.localstack.cloud" target="_blank" rel="noopener">app.localstack.cloud</a> et se connecter avec son compte.</p>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">2</div><div class="step-title">Vérifier que l'instance est active (point vert)</div></div>
+      <p>Dans le menu de gauche, sous <strong>Instances</strong>, l'entrée <strong>localhost.localstack.cloud</strong> doit afficher un point <strong style="color:#1e8449">●</strong> vert. Si le point est gris ou absent, LocalStack n'est pas démarré ou le token est incorrect.</p>
+      <div class="diff">Instance grise malgré un LocalStack démarré : vérifier que le token passé à <code>docker run</code> correspond bien au compte connecté sur app.localstack.cloud.</div>
+      <div class="info">
+        <strong>Renommer l'instance :</strong> oui, c'est possible. Cliquer sur le nom de l'instance puis sur les <strong>···</strong> (trois points) à droite de l'en-tête → <em>Rename</em>. Utile si tu as plusieurs instances pour les distinguer (ex: <em>Formation-2CLD3</em>, <em>Projet-Client</em>…).
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">3</div><div class="step-title">Accéder au Resource Browser</div></div>
+      <p>Il n'y a <strong>pas</strong> d'entrée "Resource Browser" dans le menu de gauche. Pour y accéder : <strong>cliquer sur le nom de l'instance</strong> (<em>localhost.localstack.cloud</em>) dans la liste des Instances. L'onglet <strong>Resource Browser</strong> s'active automatiquement dans la partie principale et affiche la liste de tous les services AWS émulés.</p>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">4</div><div class="step-title">Naviguer vers S3</div></div>
+      <p>Dans la liste des services, faire défiler jusqu'à la section <strong>Storage</strong> et cliquer sur <strong>S3</strong>. La vue affiche la liste des buckets (<em>"No rows"</em> pour l'instant — c'est normal).</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- Créer le bucket -->
+<section id="bucket">
+  <h2>4. Créer le bucket S3</h2>
+  <div class="card">
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">1</div><div class="step-title">Cliquer sur "Create"</div></div>
+      <p>Dans la vue Buckets, cliquer sur le bouton <strong>Create</strong> (en haut à gauche, à côté de l'icône de refresh). Un formulaire s'ouvre avec plusieurs champs :</p>
+      <ul>
+        <li><strong>ACL</strong> : laisser vide pour l'instant (on gèrera les permissions via une Bucket Policy)</li>
+        <li><strong>Bucket</strong> (obligatoire) : saisir <code>mon-site-web-demo</code></li>
+        <li><strong>Location Constraint</strong> : laisser vide → le bucket sera créé en <code>us-east-1</code> par défaut</li>
+        <li><strong>Grant Full Control / Grant Read / …</strong> : laisser tous ces champs vides</li>
+      </ul>
+      <p>Cliquer sur <strong>Submit</strong> pour créer le bucket.</p>
+      <div class="info">
+        <strong>Règles AWS de nommage :</strong> 3 à 63 caractères, minuscules, chiffres et tirets uniquement, pas de points ni de majuscules, unique mondialement dans AWS réel. Sur LocalStack, l'unicité est locale à ta machine.
+      </div>
+    </div>
+
+    <div class="ok">Le bucket est créé et visible dans la liste. On peut directement passer à l'upload.</div>
+
+    <div class="info">
+      <strong>LocalStack vs AWS réel :</strong> sur AWS réel, chaque bucket est privé par défaut et un paramètre "Block all public access" protège contre toute exposition accidentelle — il faudrait le désactiver explicitement pour héberger un site public. Sur LocalStack, cette protection n'existe pas dans l'interface : les objets sont accessibles directement via leur URL dès l'upload. C'est une simplification pour le développement local.
+    </div>
+  </div>
+</section>
+
+<!-- Upload -->
+<section id="upload">
+  <h2>5. Préparer et uploader les fichiers</h2>
+  <div class="card">
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">1</div><div class="step-title">Créer le fichier index.html</div></div>
+      <p>Dans un éditeur de texte (Bloc-notes, VS Code…), créer un fichier <code>index.html</code> :</p>
+      <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="fr"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;Mon App Cloud 🚀&lt;/title&gt;
+  &lt;style&gt;
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: white;
+      padding: 40px 60px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    h1 { color: #1a3a6b; }
+    p  { color: #555; }
+    .badge {
+      background: #e8f4fd;
+      color: #0b65c2;
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      display: inline-block;
+      margin-top: 12px;
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class="card"&gt;
+    &lt;h1&gt;🚀 Mon Application Cloud&lt;/h1&gt;
+    &lt;p&gt;Déployée sur &lt;strong&gt;Amazon S3&lt;/strong&gt; (via LocalStack).&lt;/p&gt;
+    &lt;p&gt;Aucun serveur. Aucune VM. Juste un bucket et une URL.&lt;/p&gt;
+    &lt;div class="badge"&gt;2CLD3 – Formation Introduction au Cloud&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">2</div><div class="step-title">Créer le fichier error.html</div></div>
+      <p>Créer un deuxième fichier <code>error.html</code> :</p>
+      <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="fr"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;Page introuvable&lt;/title&gt;
+  &lt;style&gt;
+    body { font-family: Arial; text-align: center; padding: 60px; background: #fff5f5; }
+    h1 { color: #c0392b; font-size: 4rem; margin: 0; }
+    p  { color: #555; }
+    a  { color: #0b65c2; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;404&lt;/h1&gt;
+  &lt;p&gt;Cette page n'existe pas.&lt;/p&gt;
+  &lt;a href="/mon-site-web-demo/index.html"&gt;Retour à l'accueil&lt;/a&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">3</div><div class="step-title">Uploader les fichiers dans le bucket</div></div>
+      <p>Dans le Resource Browser → bucket <code>mon-site-web-demo</code> → bouton <strong>Upload</strong>. Uploader les deux fichiers : <code>index.html</code> et <code>error.html</code>.</p>
+      <div class="ok">Les deux fichiers doivent apparaître à la racine du bucket. Vérifier qu'ils ne sont <strong>pas</strong> dans un sous-dossier.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Tester -->
+<section id="tester">
+  <h2>6. Tester le site</h2>
+  <div class="card">
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">1</div><div class="step-title">Accéder au site via le navigateur</div></div>
+      <p>Sur LocalStack, l'URL d'accès à un objet S3 est :</p>
+      <pre>https://localhost.localstack.cloud:4566/mon-site-web-demo/index.html</pre>
+      <p>Ouvrir cette URL dans le navigateur. La page HTML doit s'afficher.</p>
+      <div class="info">
+        <strong>Pourquoi cette URL et pas <code>http://localhost:4566/...</code> ?</strong> Le domaine <code>localhost.localstack.cloud</code> est fourni par LocalStack : il résout vers <code>127.0.0.1</code> (ta machine) mais via HTTPS. Le navigateur le traite comme une vraie page web et rend le HTML. Avec <code>http://localhost:4566</code>, certains navigateurs ou outils (WinSCP…) interceptent la réponse et proposent de télécharger le fichier au lieu de l'afficher.
+      </div>
+      <div class="ok">🎉 Si la page s'affiche correctement : ton site est "hébergé" sur S3 local. Même principe en production AWS réelle — seule l'URL change.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">2</div><div class="step-title">Tester une URL inexistante</div></div>
+      <p>Accéder à une URL qui n'existe pas :</p>
+      <pre>https://localhost.localstack.cloud:4566/mon-site-web-demo/page-inexistante.html</pre>
+      <p>LocalStack retourne un <strong>XML d'erreur brut</strong> (<code>NoSuchKey</code>) — c'est le comportement attendu. Sans Static Website Hosting configuré, il n'y a aucun mécanisme pour rediriger vers <code>error.html</code>.</p>
+      <div class="info">
+        <strong>Sur AWS réel</strong>, en activant le Static Website Hosting avec un "Error document" défini sur <code>error.html</code>, S3 retournerait ta page d'erreur personnalisée à la place du XML. C'est une des différences concrètes entre LocalStack (émulation simplifiée) et la production.
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">3</div><div class="step-title">Faire une modification et re-déployer</div></div>
+      <p>Modifier le texte de <code>index.html</code> sur ta machine (changer le titre, la couleur, ajouter un paragraphe), re-uploader le fichier, puis recharger la page dans le navigateur.</p>
+      <div class="info">C'est ainsi que fonctionne un déploiement S3 : il suffit de remplacer le fichier. Pas de redémarrage de serveur, pas de déploiement applicatif.</div>
+    </div>
+
+  </div>
+
+  <div class="ok" style="margin-top: 20px;">
+    <h3 style="margin-top: 0">🏁 Résultat final attendu</h3>
+    <ul>
+      <li>Un bucket S3 nommé <code>mon-site-web-demo</code> visible dans le Resource Browser</li>
+      <li>Deux fichiers <code>index.html</code> et <code>error.html</code> uploadés</li>
+      <li>Le site accessible sur <code>https://localhost.localstack.cloud:4566/mon-site-web-demo/index.html</code></li>
+      <li>Compréhension des étapes : bucket → permissions → policy → upload → URL</li>
+    </ul>
+  </div>
+</section>
+
+<!-- Indices -->
+<section id="indices">
+  <h2>Indices (si vous êtes bloqués)</h2>
+  <div class="card">
+    <div class="info"><strong>Indice 1</strong> — Si l'interface affiche "Network Failure" : LocalStack n'est pas démarré, ou a planté. Vérifier les logs dans le terminal avec <code>docker ps</code> et redémarrer si besoin.</div>
+    <div class="info"><strong>Indice 2</strong> — Si la page affiche un XML <code>AccessDenied</code> : la Bucket Policy n'est pas correctement enregistrée. Revérifier la section 5 (étape 3) et t'assurer que le nom du bucket dans le <code>Resource</code> correspond exactement à celui que tu as créé.</div>
+    <div class="info"><strong>Indice 3</strong> — Si la page ne s'affiche pas du tout : vérifier que le fichier est bien à la racine du bucket (pas dans un sous-dossier), et que l'URL ne contient pas de majuscule ni d'espace.</div>
+    <div class="warn"><strong>Rappel :</strong> sur LocalStack gratuit, le Static Website Hosting avec redirection automatique vers <code>index.html</code> peut se comporter différemment d'AWS réel. Utiliser l'URL complète avec <code>/index.html</code> pour ce TP.</div>
+  </div>
+</section>
+
+<!-- Pour aller plus loin -->
+<section class="card">
+  <h2>Pour aller plus loin (si vous avez du temps)</h2>
+  <ul>
+    <li><strong>Ajouter un fichier CSS externe :</strong> créer un fichier <code>style.css</code>, l'uploader dans le bucket, et le référencer depuis <code>index.html</code>. Vérifier que le CSS est bien chargé.</li>
+    <li><strong>Organiser en sous-dossiers :</strong> créer un dossier <code>assets/</code> dans le bucket, y uploader une image, et l'afficher dans la page HTML.</li>
+    <li><strong>Comparer avec AWS réel :</strong> repérer, dans les étapes que tu viens de faire, ce qui serait différent avec un vrai compte AWS. (Réponse : URL en <code>.s3-website.amazonaws.com</code>, confirmation de désactivation du blocage public plus stricte, etc.)</li>
+    <li><strong>Réfléchir à CloudFront :</strong> en production, comment ferait-on pour que ce site soit accessible via <code>https://www.monentreprise.com</code> ? Chercher ce que font AWS CloudFront et Route 53.</li>
+  </ul>
+</section>
+
+<!-- Corrigé -->
+<section id="corrige">
+  <h2>Corrigé et réflexions professionnelles</h2>
+
+  <div class="answer">
+    <h3>Pourquoi S3 pour un site statique ?</h3>
+    <p>En production, héberger un site statique sur S3 est une pratique courante et économique : pas de serveur web à maintenir, scalabilité automatique, durabilité très élevée (99,999999999% — soit statistiquement 1 objet perdu pour 10 millions stockés, sur 10 000 ans, grâce à la réplication automatique sur au moins 3 datacenters distincts), coût très bas (quelques centimes par mois pour un petit site), et intégration native avec CloudFront pour la distribution mondiale et HTTPS.</p>
+    <p>Les limites : pas d'exécution de code côté serveur, pas de session utilisateur, pas de base de données. Pour un site dynamique, on combine S3 (fichiers statiques) + Lambda (logique serveur) + API Gateway (routing) + DynamoDB (données).</p>
+  </div>
+
+  <div class="answer">
+    <h3>Que signifie la Bucket Policy qu'on a écrite ?</h3>
+    <table>
+      <thead><tr><th>Champ</th><th>Valeur</th><th>Signification</th></tr></thead>
+      <tbody>
+        <tr><td>Effect</td><td>Allow</td><td>Autoriser (≠ Deny)</td></tr>
+        <tr><td>Principal</td><td>*</td><td>Tout le monde (anonyme ou connecté)</td></tr>
+        <tr><td>Action</td><td>s3:GetObject</td><td>Uniquement la lecture d'objet (pas l'upload, pas la suppression)</td></tr>
+        <tr><td>Resource</td><td>arn:aws:s3:::mon-site-web-demo/*</td><td>Tous les objets du bucket (le <code>/*</code> est important)</td></tr>
+      </tbody>
+    </table>
+    <p>En production, on irait plus loin : restreindre l'accès à CloudFront uniquement (Origin Access Control), ajouter du chiffrement, des logs d'accès, et une policy refusant explicitement les accès non chiffrés.</p>
+  </div>
+
+  <div class="answer">
+    <h3>Valeur de LocalStack pour un professionnel</h3>
+    <p>LocalStack permet de développer et tester du code AWS sans compte réel. Cas d'usage professionnels : CI/CD offline (les tests d'intégration tournent sans accès réseau), développement en avion ou sans VPN, test des permissions IAM avant déploiement en production, formation sans contrainte de compte. Des outils comme Terraform, boto3 ou l'AWS CLI fonctionnent identiquement avec LocalStack — il suffit de changer l'URL d'endpoint.</p>
+  </div>
+</section>
+
+<!-- Récapitulatif -->
+<section class="card" style="background:#f7faff; border-color: var(--blue2);">
+  <h2 style="margin-top:0">Récapitulatif — Ce que tu as mis en pratique</h2>
+  <table>
+    <thead><tr><th>Étape</th><th>Concept clé appris</th><th>Équivalent AWS réel</th></tr></thead>
+    <tbody>
+      <tr><td>Créer un bucket</td><td>Nommage global unique, notion de région</td><td>Identique</td></tr>
+      <tr><td>Désactiver Block Public Access</td><td>Sécurité par défaut d'AWS S3</td><td>Identique (avec confirmation obligatoire)</td></tr>
+      <tr><td>Activer Static Website Hosting</td><td>S3 peut servir des fichiers comme un serveur web</td><td>Identique</td></tr>
+      <tr><td>Écrire une Bucket Policy</td><td>IAM : Allow/Deny, Principal, Action, Resource</td><td>Identique</td></tr>
+      <tr><td>Uploader index.html</td><td>Objet S3 = fichier + clé + métadonnées</td><td>Identique</td></tr>
+      <tr><td>Tester l'URL</td><td>S3 expose une URL HTTP par objet</td><td>URL différente (<code>.s3-website.amazonaws.com</code>)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Annexe 1 -->
+<section id="annexe">
+  <h2>📦 Annexe 1 – Installation de l'environnement</h2>
+  <div class="card">
+    <p>Cette annexe est à réaliser <strong>avant le TP</strong>, idéalement à la maison ou en début de séance. Elle décrit l'installation complète de Docker Desktop et de LocalStack sur Windows, macOS et Linux.</p>
+
+    <h3>A. Installer Docker Desktop</h3>
+    <div class="info">Docker Desktop est le seul logiciel à installer sur ta machine. LocalStack tourne entièrement dedans — pas d'autre installation requise.</div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">🪟</div><div class="step-title">Windows 10 / 11</div></div>
+      <ol>
+        <li>Vérifier que la virtualisation est activée : ouvrir le Gestionnaire des tâches → onglet Performance → CPU → vérifier que <em>Virtualisation : Activée</em>.</li>
+        <li>Télécharger l'installeur sur <a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="noopener">docker.com/products/docker-desktop</a>.</li>
+        <li>Lancer l'installeur et cocher <strong>"Use WSL 2 instead of Hyper-V"</strong> (recommandé sur Windows 11).</li>
+        <li>Redémarrer la machine si demandé.</li>
+        <li>Lancer Docker Desktop depuis le menu Démarrer. Attendre l'icône baleine 🐳 dans la barre des tâches.</li>
+      </ol>
+      <div class="warn">Si Docker Desktop refuse de démarrer avec une erreur WSL, ouvrir PowerShell en administrateur et lancer <code>wsl --update</code>, puis redémarrer.</div>
+      <p>Vérification dans PowerShell :</p>
+      <pre>docker --version
+docker run hello-world</pre>
+      <p>La commande <code>hello-world</code> doit afficher <em>"Hello from Docker!"</em>.</p>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">🍎</div><div class="step-title">macOS (Intel ou Apple Silicon)</div></div>
+      <ol>
+        <li>Télécharger sur <a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="noopener">docker.com/products/docker-desktop</a> — choisir la version <strong>Apple Chip</strong> (M1/M2/M3) ou <strong>Intel Chip</strong> selon ton Mac.</li>
+        <li>Glisser Docker.app dans le dossier Applications.</li>
+        <li>Lancer Docker depuis Applications, accepter les permissions système.</li>
+      </ol>
+      <p>Vérification dans le Terminal :</p>
+      <pre>docker --version
+docker run hello-world</pre>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">🐧</div><div class="step-title">Linux (Ubuntu / Debian)</div></div>
+      <p>Sur Linux, on installe Docker Engine (pas Docker Desktop) :</p>
+      <pre># Supprimer d'éventuelles anciennes versions
+sudo apt remove docker docker-engine docker.io containerd runc
+
+# Installer les dépendances
+sudo apt update
+sudo apt install -y ca-certificates curl gnupg
+
+# Ajouter la clé GPG officielle Docker
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+# Ajouter le dépôt
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Installer Docker
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+# Permettre d'utiliser Docker sans sudo
+sudo usermod -aG docker $USER
+newgrp docker</pre>
+      <p>Vérification :</p>
+      <pre>docker --version
+docker run hello-world</pre>
+    </div>
+
+    <h3>B. Créer son compte LocalStack</h3>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">1</div><div class="step-title">S'inscrire sur app.localstack.cloud</div></div>
+      <ol>
+        <li>Aller sur <a href="https://app.localstack.cloud/sign-up" target="_blank" rel="noopener">app.localstack.cloud/sign-up</a>.</li>
+        <li>Créer un compte avec un email et un mot de passe. Confirmer l'email si demandé.</li>
+        <li>Sélectionner le plan <strong>Hobby</strong> (gratuit, pas de carte bancaire).</li>
+      </ol>
+      <div class="ok">Le plan Hobby donne accès au Resource Browser (interface web), à l'instance locale et aux services de base dont S3, Lambda, DynamoDB, IAM.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">2</div><div class="step-title">Récupérer son Auth Token et le stocker en variable d'environnement</div></div>
+      <ol>
+        <li>Une fois connecté, cliquer sur <strong>Workspace</strong> dans le menu de gauche.</li>
+        <li>Aller dans <strong>Auth Tokens</strong>.</li>
+        <li>Cliquer sur <strong>Create Token</strong>, lui donner un nom (ex: <code>formation-2cld3</code>).</li>
+        <li>Copier le token généré (commence par <code>ls-</code>). <strong>Le noter dans un endroit sûr</strong> — il ne sera plus affiché après fermeture de la page.</li>
+      </ol>
+      <p>Stocker le token dans une variable d'environnement — <strong>ne jamais l'écrire en dur dans une commande</strong> :</p>
+      <p><strong>Windows (PowerShell) — session courante :</strong></p>
+      <pre>$env:LOCALSTACK_AUTH_TOKEN = "ls-XXXXX"</pre>
+      <p><strong>Windows (PowerShell) — persistant pour ton compte utilisateur :</strong></p>
+      <pre>[Environment]::SetEnvironmentVariable("LOCALSTACK_AUTH_TOKEN", "ls-XXXXX", "User")</pre>
+      <p><strong>macOS / Linux — session courante :</strong></p>
+      <pre>export LOCALSTACK_AUTH_TOKEN="ls-XXXXX"</pre>
+      <p><strong>macOS / Linux — persistant (dans ~/.bashrc ou ~/.zshrc) :</strong></p>
+      <pre>echo 'export LOCALSTACK_AUTH_TOKEN="ls-XXXXX"' >> ~/.zshrc
+source ~/.zshrc</pre>
+      <div class="info">
+        <strong>Pourquoi ne pas écrire le token en dur ?</strong> Un secret écrit directement dans une commande apparaît dans l'historique du terminal (<code>history</code>), dans les logs Docker, et risque d'être copié dans un script ou un fichier versionné. Stocker les secrets dans des variables d'environnement est la pratique standard en DevOps.
+      </div>
+    </div>
+
+    <h3>C. Installer AWS CLI</h3>
+    <div class="info">La CLI AWS est nécessaire pour certaines opérations que l'interface web de LocalStack ne gère pas correctement (notamment l'upload de fichiers avec un Content-Type précis).</div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">🪟</div><div class="step-title">Windows</div></div>
+      <pre>winget install Amazon.AWSCLI</pre>
+      <p>Fermer et rouvrir PowerShell, puis vérifier :</p>
+      <pre>aws --version</pre>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">🍎</div><div class="step-title">macOS</div></div>
+      <pre>brew install awscli</pre>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">🐧</div><div class="step-title">Linux</div></div>
+      <pre>sudo apt install awscli</pre>
+    </div>
+
+    <h3>D. Premier test complet</h3>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">✅</div><div class="step-title">Vérifier que tout fonctionne ensemble</div></div>
+      <p>La variable d'environnement étant déjà définie (étape B), lancer LocalStack :</p>
+      <pre>docker run --rm -p 4566:4566 -e LOCALSTACK_AUTH_TOKEN localstack/localstack</pre>
+      <p>Attendre le message <code>Ready.</code> dans les logs (30 à 60 secondes au premier lancement).</p>
+      <p>Dans un <strong>autre terminal</strong>, tester :</p>
+      <pre>curl http://localhost:4566/_localstack/health</pre>
+      <p>Réponse attendue (extrait) :</p>
+      <pre>{"status": "running", "services": {"s3": "running", "iam": "running", ...}}</pre>
+      <p>Puis ouvrir <a href="https://app.localstack.cloud" target="_blank" rel="noopener">app.localstack.cloud</a> dans le navigateur et cliquer sur l'instance : le point doit être vert.</p>
+      <div class="ok">Docker ✓ · curl ✓ · interface web verte ✓ → environnement prêt pour le TP.</div>
+    </div>
+
+    <h3>E. Résolution des problèmes courants</h3>
+    <table>
+      <thead><tr><th>Problème</th><th>Cause probable</th><th>Solution</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>docker: command not found</code></td>
+          <td>Docker Desktop non installé ou non démarré</td>
+          <td>Installer Docker Desktop, le lancer, attendre l'icône baleine</td>
+        </tr>
+        <tr>
+          <td>Docker Desktop ne démarre pas (Windows)</td>
+          <td>WSL 2 non à jour ou virtualisation désactivée</td>
+          <td>PowerShell admin → <code>wsl --update</code> → redémarrer</td>
+        </tr>
+        <tr>
+          <td>Docker Desktop demande un mot de passe admin à chaque lancement</td>
+          <td>Option "Exécuter en tant qu'administrateur" cochée sur le raccourci</td>
+          <td>Clic droit sur le raccourci → Propriétés → Avancé → décocher "Exécuter en tant qu'administrateur"</td>
+        </tr>
+        <tr>
+          <td><code>docker</code> non reconnu en PowerShell normal</td>
+          <td>Même cause : Docker lancé en admin uniquement</td>
+          <td>Même solution que ci-dessus</td>
+        </tr>
+        <tr>
+          <td>LocalStack démarre mais instance = grise dans l'interface</td>
+          <td>Token incorrect ou expiré</td>
+          <td>Vérifier le token dans Workspace → Auth Tokens, en créer un nouveau</td>
+        </tr>
+        <tr>
+          <td><code>port 4566 already in use</code></td>
+          <td>Un autre processus occupe le port</td>
+          <td><code>docker ps</code> → <code>docker stop &lt;id&gt;</code></td>
+        </tr>
+        <tr>
+          <td>Première image très lente à télécharger</td>
+          <td>Image LocalStack (~600 Mo) à télécharger</td>
+          <td>Normal. Pré-télécharger avant le TP : <code>docker pull localstack/localstack</code></td>
+        </tr>
+        <tr>
+          <td>"Network Failure" dans le Resource Browser lors d'une création</td>
+          <td>Chrome bloque les requêtes HTTPS → localhost (Private Network Access)</td>
+          <td><code>chrome://flags</code> → <strong>Local Network Access Checks</strong> → <strong>Disabled</strong> → Relaunch</td>
+        </tr>
+        <tr>
+          <td>Fichier affiché en texte brut ou téléchargé au lieu d'être rendu</td>
+          <td>Content-Type non défini lors de l'upload via l'interface web</td>
+          <td>Uploader via la CLI : <code>aws --endpoint-url=http://localhost:4566 s3 cp fichier.html s3://bucket/ --content-type "text/html" --no-sign-request</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="info">
+      <strong>Conseil formateur :</strong> faire réaliser cette annexe la veille ou en début de séance. Pré-télécharger l'image Docker sur les postes de salle avec <code>docker pull localstack/localstack</code> évite d'attendre pendant le TP.
+    </div>
+  </div>
+</section>
+
+<!-- Annexe 2 -->
+<section id="annexe2">
+  <h2>🧹 Annexe 2 – Suppression et nettoyage des ressources</h2>
+  <div class="card">
+    <p>Supprimer proprement ses ressources est un réflexe professionnel essentiel. Sur LocalStack, c'est optionnel (tout disparaît à l'arrêt du conteneur). Sur AWS réel, c'est <strong>indispensable</strong> : les ressources non supprimées continuent de tourner et de générer des coûts.</p>
+
+    <h3>A. Supprimer les ressources S3 (CLI)</h3>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">1</div><div class="step-title">Vider le bucket</div></div>
+      <p>Un bucket S3 ne peut pas être supprimé s'il contient encore des objets. Il faut d'abord les supprimer tous :</p>
+      <pre># Windows PowerShell
+aws --endpoint-url=http://localhost:4566 `
+    s3 rm s3://mon-site-web-demo --recursive `
+    --no-sign-request
+
+# macOS / Linux
+aws --endpoint-url=http://localhost:4566 \
+    s3 rm s3://mon-site-web-demo --recursive \
+    --no-sign-request</pre>
+      <p>Le flag <code>--recursive</code> supprime tous les objets du bucket en une seule commande.</p>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">2</div><div class="step-title">Supprimer le bucket</div></div>
+      <pre>aws --endpoint-url=http://localhost:4566 s3 rb s3://mon-site-web-demo --no-sign-request</pre>
+      <p><code>rb</code> = <em>remove bucket</em>. Le bucket doit être vide, sinon la commande échoue.</p>
+      <div class="ok">Vérifier la suppression : <code>aws --endpoint-url=http://localhost:4566 s3 ls --no-sign-request</code> — le bucket ne doit plus apparaître.</div>
+    </div>
+
+    <h3>B. Arrêter LocalStack</h3>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">3</div><div class="step-title">Arrêter le conteneur</div></div>
+      <p>Dans le terminal où LocalStack tourne, faire <strong>Ctrl+C</strong>. Grâce au flag <code>--rm</code> utilisé au lancement, le conteneur se supprime automatiquement — et avec lui toutes les ressources encore présentes.</p>
+      <p>Vérifier que le conteneur est bien arrêté :</p>
+      <pre>docker ps</pre>
+      <p>Aucun conteneur <code>localstack</code> ne doit apparaître.</p>
+    </div>
+
+    <h3>C. LocalStack vs AWS réel — une différence fondamentale</h3>
+    <table>
+      <thead><tr><th></th><th>LocalStack</th><th>AWS réel</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Arrêter le conteneur / la session</strong></td>
+          <td>Toutes les ressources disparaissent</td>
+          <td>Les ressources continuent d'exister (et de coûter)</td>
+        </tr>
+        <tr>
+          <td><strong>Oubli de suppression</strong></td>
+          <td>Sans conséquence</td>
+          <td>Facture qui s'accumule silencieusement</td>
+        </tr>
+        <tr>
+          <td><strong>Bonne pratique</strong></td>
+          <td>Supprimer quand même pour prendre l'habitude</td>
+          <td>Supprimer obligatoirement après chaque TP / projet test</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="warn">
+      <strong>Cas réel :</strong> une startup a laissé tourner une instance EC2 <code>m5.8xlarge</code> (32 vCPU) allumée par erreur pendant un mois → <strong>4 800 € de surcoût</strong>. Le réflexe "je supprime ce que je n'utilise plus" s'acquiert dès la formation.
+    </div>
+
+    <h3>D. Aller plus loin — nettoyage automatique sur AWS réel</h3>
+    <p>En production, on ne supprime pas à la main. On automatise :</p>
+    <ul>
+      <li><strong>AWS Budgets + alertes</strong> : notification dès qu'une dépense dépasse un seuil</li>
+      <li><strong>Lifecycle policies S3</strong> : suppression automatique des objets après N jours</li>
+      <li><strong>Terraform <code>destroy</code></strong> : supprime toute l'infrastructure décrite dans le code en une commande</li>
+      <li><strong>AWS Cost Explorer</strong> : visualiser les ressources qui coûtent, détecter les oublis</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+<footer>
+  Document 2CLD3 – TP après-midi LocalStack · Adaptation locale de l'Option 2 (AWS S3 Static Website) du cours Jour 1 ·
+  Prérequis : Docker Desktop + compte LocalStack gratuit
+</footer>
+</body>
+</html>

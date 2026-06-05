@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2CLD3 – TP 4 : Application serverless avec Terraform</title>
+  <style>
+    :root {
+      --blue: #1a3a6b; --blue2: #0b65c2;
+      --purple: #6d28d9; --purple2: #5b21b6;
+      --green: #1e8449; --orange: #e67e22;
+      --bg: #f5f7fc; --ink: #192030; --muted: #5d6980;
+      --card: #fff; --border: #dce6f2;
+      --ok: #eafaf1; --warn: #fef9e7; --tip: #eaf4ff;
+      --purple-light: #f3f0ff;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Segoe UI, Roboto, Arial, sans-serif; color: var(--ink); background: var(--bg); line-height: 1.6; }
+    header { background: linear-gradient(135deg, #1e1060, #6d28d9); color: white; padding: 44px 28px; }
+    header .wrap, main { max-width: 1050px; margin: auto; }
+    h1 { margin: 0; font-size: 2rem; }
+    .subtitle { font-size: 1.05rem; opacity: .9; margin-top: 8px; }
+    .pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+    .pill { background: #ffffff22; border: 1px solid #ffffff55; border-radius: 999px; padding: 5px 14px; font-size: .92rem; }
+    main { padding: 32px 28px; }
+    h2 { color: var(--blue); font-size: 1.5rem; border-left: 5px solid var(--purple); padding-left: 12px; margin-top: 36px; }
+    h3 { color: #0d2a5c; margin-top: 22px; font-size: 1.05rem; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px; margin: 18px 0; box-shadow: 0 2px 10px #1a3a6b0c; }
+    .step { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; margin: 14px 0; }
+    .step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .step-num { background: var(--purple); color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1rem; flex-shrink: 0; }
+    .step-title { font-weight: bold; color: var(--blue); font-size: 1.05rem; }
+    pre { background: #1e1a2e; color: #c8d8f0; padding: 14px 18px; border-radius: 10px; overflow-x: auto; margin: 10px 0; font-size: .9rem; line-height: 1.55; font-family: Consolas, 'Courier New', monospace; }
+    code { background: #eaf1fb; color: #0d2a5c; padding: 2px 6px; border-radius: 5px; font-size: .92rem; font-family: Consolas, monospace; }
+    .info { background: var(--tip); border-left: 5px solid var(--blue2); border-radius: 10px; padding: 14px 18px; margin: 12px 0; }
+    .ok { background: var(--ok); border-left: 5px solid var(--green); border-radius: 10px; padding: 14px 18px; margin: 12px 0; }
+    .warn { background: var(--warn); border-left: 5px solid var(--orange); border-radius: 10px; padding: 14px 18px; margin: 12px 0; }
+    .iac { background: var(--purple-light); border-left: 5px solid var(--purple); border-radius: 10px; padding: 14px 18px; margin: 12px 0; }
+    .arch { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 16px 0; justify-content: center; }
+    .arch-box { background: var(--purple-light); border: 2px solid var(--purple); border-radius: 10px; padding: 12px 18px; text-align: center; font-weight: bold; color: var(--purple); min-width: 110px; }
+    .arch-box small { display: block; font-weight: normal; color: var(--muted); font-size: .82rem; margin-top: 2px; }
+    .arch-arrow { color: var(--purple); font-size: 1.4rem; font-weight: bold; }
+    .file-tree { background: #1e1a2e; color: #c8d8f0; padding: 14px 20px; border-radius: 10px; font-family: Consolas, monospace; font-size: .9rem; line-height: 1.8; margin: 10px 0; }
+    .file-tree .dir { color: #82aaff; }
+    .file-tree .file { color: #c3e88d; }
+    .file-tree .desc { color: #7c6f9e; }
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; margin: 12px 0; }
+    th, td { border: 1px solid var(--border); padding: 9px 12px; text-align: left; vertical-align: top; }
+    th { background: #f0ecff; color: var(--purple); }
+    .toc a { display: inline-block; margin: 4px 5px 4px 0; padding: 5px 10px; border: 1px solid var(--border); border-radius: 8px; text-decoration: none; color: var(--blue2); background: white; font-size: .9rem; }
+    .question { background: white; border: 2px dashed #a0b8d8; border-radius: 10px; padding: 16px 18px; margin: 16px 0; }
+    .answer { background: var(--ok); border-left: 5px solid var(--green); border-radius: 10px; padding: 16px 18px; margin: 14px 0; }
+    footer { margin-top: 40px; color: var(--muted); font-size: .88rem; text-align: center; padding-bottom: 32px; }
+    a { color: var(--blue2); }
+    @media (max-width: 700px) { main { padding: 20px 14px; } }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>TP 4 – Application serverless : inscription et connexion utilisateur</h1>
+    <div class="subtitle">S3 + API Gateway + Lambda (Python) + DynamoDB — tout déployé par Terraform sur LocalStack.</div>
+    <div class="pills">
+      <span class="pill">⏱ 60–75 min</span>
+      <span class="pill">👥 Binômes</span>
+      <span class="pill">🟣 Terraform + LocalStack</span>
+      <span class="pill">🐍 Python</span>
+      <span class="pill">📄 Prérequis : TP 3 réalisé</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<section class="card toc">
+  <strong>Navigation :</strong>
+  <a href="#objectif">Objectif</a>
+  <a href="#architecture">Architecture</a>
+  <a href="#prerequis">1 · Prérequis</a>
+  <a href="#structure">2 · Structure</a>
+  <a href="#comprendre">3 · Comprendre main.tf</a>
+  <a href="#deployer">4 · Déployer</a>
+  <a href="#tester">5 · Tester</a>
+  <a href="#modifier">6 · Modifier</a>
+  <a href="#destroy">7 · Destroy</a>
+  <a href="#reflexion">Réflexion</a>
+  <a href="#corrige">Corrigé</a>
+</section>
+
+<!-- Objectif -->
+<section id="objectif">
+  <h2>Objectif</h2>
+  <div class="card">
+    <p>En TP 3, Terraform déployait un site statique. Dans ce TP, on passe à une vraie application : un frontend HTML/JS qui permet à un utilisateur de <strong>s'inscrire et de se connecter</strong>, avec les données stockées dans une base DynamoDB. Toute la logique métier tourne dans des <strong>fonctions Lambda Python</strong> déclenchées via <strong>API Gateway</strong>.</p>
+    <p>Tout est déployé en une seule commande Terraform. Aucun serveur à gérer, aucune VM, aucune installation de base de données.</p>
+    <div class="iac">
+      <strong>Ce que tu vas déployer :</strong> 13 ressources Terraform — une table DynamoDB, un rôle IAM, deux fonctions Lambda, une API Gateway avec 2 routes, et un bucket S3. En production AWS réelle, ce serait exactement la même architecture.
+    </div>
+  </div>
+</section>
+
+<!-- Architecture -->
+<section id="architecture">
+  <h2>Architecture</h2>
+  <div class="card">
+    <div class="arch">
+      <div class="arch-box">🌐 Navigateur<small>index.html (S3)</small></div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box">🔀 API Gateway<small>POST /register<br>POST /login</small></div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box">⚡ Lambda<small>register.py<br>login.py</small></div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box">🗄 DynamoDB<small>table users</small></div>
+    </div>
+
+    <table style="margin-top:16px">
+      <thead><tr><th>Service</th><th>Rôle</th><th>Ce que Terraform crée</th></tr></thead>
+      <tbody>
+        <tr><td><strong>S3</strong></td><td>Héberge le frontend (HTML/JS)</td><td><code>aws_s3_bucket</code> + <code>aws_s3_object</code></td></tr>
+        <tr><td><strong>API Gateway</strong></td><td>Reçoit les requêtes HTTP et les route vers Lambda</td><td>REST API + 2 ressources + 2 méthodes + 2 intégrations + stage</td></tr>
+        <tr><td><strong>Lambda</strong></td><td>Exécute le code Python (inscription, connexion)</td><td>2 <code>aws_lambda_function</code> + rôle IAM</td></tr>
+        <tr><td><strong>DynamoDB</strong></td><td>Stocke les utilisateurs (email, hash du mot de passe, token)</td><td><code>aws_dynamodb_table</code></td></tr>
+      </tbody>
+    </table>
+
+    <div class="info">
+      <strong>Serverless</strong> signifie qu'il n'y a aucun serveur à provisionner, patcher ou surveiller. Lambda exécute le code à la demande et s'arrête automatiquement. DynamoDB est entièrement managé. On ne paie (en production) que ce qu'on utilise réellement.
+    </div>
+  </div>
+</section>
+
+<!-- Prérequis -->
+<section id="prerequis">
+  <h2>1. Prérequis</h2>
+  <div class="card">
+    <ul>
+      <li><strong>LocalStack démarré</strong> avec le token en variable d'environnement</li>
+      <li><strong>Terraform installé</strong> — <code>terraform --version</code></li>
+      <li><strong>AWS CLI installée</strong> — <code>aws --version</code></li>
+      <li><strong>Python 3.x</strong> — <code>python --version</code> (pour comprendre le code Lambda, pas besoin de l'exécuter localement)</li>
+    </ul>
+    <div class="iac">
+      <strong>Repo GitHub du TP :</strong> <a href="https://github.com/mentiforjastudio-svg/2CLD-tp4-terraform-serverless" target="_blank" rel="noopener">github.com/mentiforjastudio-svg/2CLD-tp4-terraform-serverless</a><br><br>
+      Cloner le projet :
+      <pre style="margin:8px 0 0">git clone https://github.com/mentiforjastudio-svg/2CLD-tp4-terraform-serverless.git
+cd 2CLD-tp4-terraform-serverless</pre>
+      Tu obtiens directement <code>main.tf</code>, <code>lambda/</code> et <code>frontend/</code> — prêts à l'emploi.
+    </div>
+  </div>
+</section>
+
+<!-- Structure -->
+<section id="structure">
+  <h2>2. Structure du projet</h2>
+  <div class="card">
+    <div class="file-tree">
+      <span class="dir">tp4-terraform-serverless/</span><br>
+      ├── <span class="file">main.tf</span>                     <span class="desc"># toute l'infrastructure Terraform</span><br>
+      ├── <span class="dir">lambda/</span><br>
+      │   ├── <span class="file">register.py</span>             <span class="desc"># inscription : vérifie + stocke dans DynamoDB</span><br>
+      │   └── <span class="file">login.py</span>                <span class="desc"># connexion : vérifie email/password</span><br>
+      ├── <span class="dir">frontend/</span><br>
+      │   └── <span class="file">index.html.tpl</span>          <span class="desc"># template HTML — l'URL de l'API est injectée par Terraform</span><br>
+      └── <span class="file">.gitignore</span>
+    </div>
+
+    <div class="info">
+      <strong>Pourquoi <code>.tpl</code> ?</strong> Le fichier frontend contient un placeholder <code>${"{api_url}"}</code> que Terraform remplace par l'URL réelle de l'API au moment du déploiement (via la fonction <code>templatefile()</code>). Ainsi le frontend connaît toujours l'URL correcte, même si l'ID de l'API change entre deux déploiements.
+    </div>
+  </div>
+</section>
+
+<!-- Comprendre main.tf -->
+<section id="comprendre">
+  <h2>3. Comprendre main.tf</h2>
+  <div class="card">
+    <p>Ouvrir <code>main.tf</code>. Il contient 6 blocs principaux — lire chacun avant de déployer.</p>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">1</div><div class="step-title">Provider — deux providers cette fois</div></div>
+      <p>Le provider <code>aws</code> est identique au TP 3, mais avec plus d'endpoints LocalStack. Un second provider <code>archive</code> est déclaré — c'est lui qui zippe les fichiers Python pour les envoyer à Lambda.</p>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">2</div><div class="step-title">DynamoDB — la table users</div></div>
+      <p>Une seule ressource <code>aws_dynamodb_table</code> avec <code>email</code> comme clé primaire (type String). Le mode <code>PAY_PER_REQUEST</code> signifie qu'on ne provisionne pas de capacité en avance — on paie à l'utilisation.</p>
+      <pre>resource "aws_dynamodb_table" "users" {
+  name         = "users"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "email"
+  attribute {
+    name = "email"
+    type = "S"
+  }
+}</pre>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">3</div><div class="step-title">IAM — le rôle d'exécution Lambda</div></div>
+      <p>Lambda a besoin d'un rôle IAM pour savoir ce qu'il a le droit de faire. Ici : uniquement <code>GetItem</code> et <code>PutItem</code> sur la table <code>users</code>. C'est le principe du <strong>least privilege</strong> — on n'accorde que le minimum nécessaire.</p>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">4</div><div class="step-title">Lambda — packaging et déploiement</div></div>
+      <p>Terraform zippe automatiquement les fichiers <code>.py</code> via le provider <code>archive</code>, puis les envoie à LocalStack. Le <code>source_code_hash</code> permet de détecter les modifications du code Python et de redéployer uniquement si nécessaire.</p>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">5</div><div class="step-title">API Gateway — les routes HTTP</div></div>
+      <p>L'API expose deux routes : <code>POST /register</code> et <code>POST /login</code>. Chaque route est composée de 3 ressources Terraform : une ressource (le chemin URL), une méthode (POST), et une intégration (AWS_PROXY → Lambda). Le type <code>AWS_PROXY</code> passe la requête HTTP brute à Lambda sans transformation.</p>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">6</div><div class="step-title">S3 + templatefile — le frontend intelligent</div></div>
+      <p>Terraform utilise la fonction <code>templatefile()</code> pour injecter l'URL de l'API dans le HTML avant de l'uploader dans S3. Ainsi <code>const API_URL = "${"{api_url}"}"</code> dans le template devient <code>const API_URL = "https://abc123.execute-api.localhost.localstack.cloud:4566/dev"</code> dans le fichier final.</p>
+      <div class="iac">C'est un pattern courant en IaC : les fichiers de configuration dépendent de ressources créées dynamiquement (IDs, URLs, ARNs). <code>templatefile()</code> résout cette dépendance proprement.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Déployer -->
+<section id="deployer">
+  <h2>4. Déployer</h2>
+  <div class="card">
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">1</div><div class="step-title">Initialiser</div></div>
+      <pre>terraform init</pre>
+      <p>Terraform télécharge les providers <code>hashicorp/aws</code> et <code>hashicorp/archive</code>.</p>
+      <div class="ok"><code>Terraform has been successfully initialized!</code></div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">2</div><div class="step-title">Planifier</div></div>
+      <pre>terraform plan</pre>
+      <div class="ok">
+        Résultat attendu :
+        <pre style="margin:8px 0 0">Plan: 13 to add, 0 to change, 0 to destroy.</pre>
+        13 ressources à créer : 1 table DynamoDB, 1 rôle IAM + 1 policy, 2 archives, 2 Lambda, 1 API Gateway + 2 ressources + 2 méthodes + 2 intégrations + 1 déploiement + 1 stage + 2 permissions Lambda, 1 bucket S3 + 1 objet.
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">3</div><div class="step-title">Appliquer</div></div>
+      <pre>terraform apply</pre>
+      <p>Confirmer avec <code>yes</code>. Après quelques secondes, Terraform affiche les outputs :</p>
+      <pre>Outputs:
+
+api_login_endpoint    = "https://&lt;id&gt;.execute-api.localhost.localstack.cloud:4566/dev/login"
+api_register_endpoint = "https://&lt;id&gt;.execute-api.localhost.localstack.cloud:4566/dev/register"
+api_url               = "https://&lt;id&gt;.execute-api.localhost.localstack.cloud:4566/dev"
+frontend_url          = "https://localhost.localstack.cloud:4566/auth-frontend/index.html"</pre>
+      <div class="ok"><code>Apply complete! Resources: 13 added, 0 changed, 0 destroyed.</code></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Tester -->
+<section id="tester">
+  <h2>5. Tester l'application</h2>
+  <div class="card">
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">1</div><div class="step-title">Ouvrir le frontend</div></div>
+      <p>Copier la valeur de <code>frontend_url</code> dans le navigateur :</p>
+      <pre>https://localhost.localstack.cloud:4566/auth-frontend/index.html</pre>
+      <p>Le formulaire d'inscription doit s'afficher.</p>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">2</div><div class="step-title">S'inscrire</div></div>
+      <p>Entrer un email et un mot de passe → cliquer <strong>S'inscrire</strong>. Si tout fonctionne, l'interface passe en état "Connecté" et affiche le token de session.</p>
+      <div class="ok">Le token est un identifiant de session généré aléatoirement (64 caractères hexadécimaux), stocké dans <code>sessionStorage</code> côté navigateur.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">3</div><div class="step-title">Vérifier dans DynamoDB</div></div>
+      <p>Dans le Resource Browser de LocalStack → DynamoDB → table <strong>users</strong> → explorer les items. L'utilisateur créé doit apparaître avec son email, son <code>password_hash</code> et son <code>session_token</code>.</p>
+      <div class="warn">Observer que le mot de passe n'est <strong>jamais stocké en clair</strong> — uniquement son empreinte SHA-256. C'est une règle fondamentale de sécurité.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">4</div><div class="step-title">Tester via CLI — appel direct à l'API</div></div>
+      <p>On peut aussi tester les endpoints directement avec la CLI, sans passer par le frontend :</p>
+      <pre># Inscription (remplacer &lt;api_id&gt; par la valeur affichée dans les outputs)
+aws --endpoint-url=http://localhost:4566 --no-sign-request `
+    apigateway get-rest-apis
+
+# Ou tester directement avec curl
+curl -X POST https://&lt;api_id&gt;.execute-api.localhost.localstack.cloud:4566/dev/register `
+    -H "Content-Type: application/json" `
+    -d '{"email":"test@exemple.com","password":"motdepasse123"}'</pre>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">5</div><div class="step-title">Se déconnecter et se reconnecter</div></div>
+      <p>Cliquer <strong>Se déconnecter</strong>, puis aller sur l'onglet <strong>Connexion</strong> et entrer les mêmes identifiants. Le token doit être le même qu'à l'inscription.</p>
+      <p>Tester avec un mauvais mot de passe : le message "Email ou mot de passe incorrect" doit s'afficher.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- Modifier -->
+<section id="modifier">
+  <h2>6. Modifier le code Lambda et re-déployer</h2>
+  <div class="card">
+    <p>Modifier <code>lambda/register.py</code> : ajouter un champ <code>created_at</code> lisible dans le message de retour.</p>
+    <p>Dans la fonction, trouver le bloc <code>return</code> final et ajouter <code>"created_at"</code> :</p>
+    <pre>return {
+    "statusCode": 201,
+    "headers": HEADERS,
+    "body": json.dumps({
+        "message": "Inscription réussie",
+        "email": email,
+        "token": token,
+        "created_at": datetime.utcnow().isoformat(),  # ajout
+    }),
+}</pre>
+    <p>Puis re-déployer :</p>
+    <pre>terraform apply</pre>
+    <div class="ok">Terraform détecte que le fichier Python a changé (via le hash SHA256), recrée l'archive ZIP et redéploie uniquement la fonction <code>register</code>.
+      <pre style="margin:8px 0 0">Plan: 0 to add, 1 to change, 0 to destroy.</pre>
+    </div>
+  </div>
+</section>
+
+<!-- Destroy -->
+<section id="destroy">
+  <h2>7. Nettoyer</h2>
+  <div class="card">
+    <pre>terraform destroy</pre>
+    <p>Les 13 ressources sont supprimées en une commande. Confirmer avec <code>yes</code>.</p>
+    <div class="warn">En production, <code>destroy</code> supprime aussi les données DynamoDB. Toujours faire une sauvegarde avant de détruire un environnement qui contient des données réelles.</div>
+  </div>
+</section>
+
+<!-- Réflexion -->
+<section id="reflexion">
+  <h2>Réflexion</h2>
+  <div class="card">
+
+    <div class="question">
+      <h3>Question 1 — Serverless vs serveur traditionnel</h3>
+      <p>Dans cette architecture, qui démarre et arrête les fonctions Lambda ? Que se passe-t-il si 1000 utilisateurs se connectent simultanément ?</p>
+    </div>
+
+    <div class="question">
+      <h3>Question 2 — IAM et least privilege</h3>
+      <p>Le rôle Lambda n'autorise que <code>GetItem</code> et <code>PutItem</code> sur la table <code>users</code>. Que se passerait-il si le code Lambda tentait de faire un <code>Scan</code> (lire toute la table) ou de supprimer un item ?</p>
+    </div>
+
+    <div class="question">
+      <h3>Question 3 — templatefile et dépendances dynamiques</h3>
+      <p>Pourquoi ne peut-on pas simplement mettre l'URL de l'API en dur dans <code>index.html</code> ? Qu'est-ce qui change entre deux déploiements ?</p>
+    </div>
+
+    <div class="question">
+      <h3>Question 4 — Limites de sécurité</h3>
+      <p>Ce TP utilise SHA-256 pour hacher les mots de passe. En production, pourquoi préférerait-on <code>bcrypt</code> ou <code>argon2</code> ? Quelle autre limite de sécurité vois-tu dans cette implémentation ?</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- Corrigé -->
+<section id="corrige">
+  <h2>Corrigé</h2>
+
+  <div class="answer">
+    <h3>Question 1 — Serverless</h3>
+    <p>AWS (ou LocalStack) démarre et arrête les instances Lambda automatiquement. Chaque requête peut déclencher une nouvelle instance Lambda. Si 1000 utilisateurs se connectent simultanément, AWS lance jusqu'à 1000 instances Lambda en parallèle — sans aucune configuration de notre part. C'est la scalabilité automatique du serverless. En retour, on perd le contrôle sur l'environnement d'exécution et la persistance en mémoire entre deux invocations.</p>
+  </div>
+
+  <div class="answer">
+    <h3>Question 2 — IAM et least privilege</h3>
+    <p>La requête serait refusée avec une erreur <code>AccessDeniedException</code>. IAM évalue toutes les actions et refuse par défaut tout ce qui n'est pas explicitement autorisé. C'est le principe du least privilege : si une fonction Lambda est compromise, l'attaquant ne peut faire que ce que le rôle autorise. Ici, il pourrait lire et écrire des items, mais pas scanner toute la table, ni la supprimer, ni accéder à d'autres services.</p>
+  </div>
+
+  <div class="answer">
+    <h3>Question 3 — templatefile</h3>
+    <p>L'ID de l'API Gateway est généré aléatoirement par AWS (ou LocalStack) à chaque création. Si on détruit et recrée l'infrastructure, l'ID change et l'URL change. Le frontend hardcodé serait alors cassé. <code>templatefile()</code> résout ce problème en injectant l'URL réelle au moment du déploiement — le frontend est toujours cohérent avec l'infrastructure.</p>
+  </div>
+
+  <div class="answer">
+    <h3>Question 4 — Sécurité des mots de passe</h3>
+    <p>SHA-256 est rapide — c'est un avantage pour le hachage de fichiers, mais un inconvénient pour les mots de passe : un attaquant peut tester des milliards de combinaisons par seconde avec du matériel GPU. <code>bcrypt</code> et <code>argon2</code> sont délibérément lents et configurables en difficulté — ils résistent aux attaques par force brute. Autre limite : l'absence de "sel" (valeur aléatoire ajoutée avant le hachage) rend les hashes identiques pour deux utilisateurs ayant le même mot de passe, ce qui facilite les attaques par tables arc-en-ciel.</p>
+  </div>
+
+</section>
+
+<!-- Récap -->
+<section class="card" style="background:#f7f0ff; border-color: var(--purple); margin-top:28px">
+  <h2 style="margin-top:0; border-color:var(--purple)">Progression des TP</h2>
+  <table>
+    <thead><tr><th>TP</th><th>Ce qu'on déploie</th><th>Concept clé</th></tr></thead>
+    <tbody>
+      <tr><td><strong>TP 2</strong></td><td>Bucket S3 + fichiers HTML (interface + CLI)</td><td>Stockage objet, Content-Type, accès public</td></tr>
+      <tr><td><strong>TP 3</strong></td><td>Même chose, mais via Terraform</td><td>IaC, déclaratif, plan/apply/destroy</td></tr>
+      <tr><td><strong>TP 4</strong></td><td>S3 + API Gateway + Lambda + DynamoDB via Terraform</td><td>Serverless, routage HTTP, IAM, templatefile</td></tr>
+    </tbody>
+  </table>
+  <div class="iac" style="margin-top:14px">
+    <strong>La suite (B3) :</strong> variables et modules Terraform pour éviter la répétition, workspaces (dev/staging/prod), déploiement automatique via GitHub Actions CI/CD, monitoring CloudWatch, gestion des secrets avec AWS Secrets Manager.
+  </div>
+</section>
+
+</main>
+<footer>Document 2CLD3 – TP 4 Serverless · Terraform + LocalStack · S3 + API Gateway + Lambda Python + DynamoDB</footer>
+</body>
+</html>
