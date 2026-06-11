@@ -40,7 +40,7 @@
 <span class="tag">Scalabilité</span><span class="tag">Résilience</span><span class="tag">AWS</span><span class="tag green">Architecture distribuée</span>
 <h2>Cas 1 – Netflix : migrer vers AWS pour accompagner la croissance mondiale</h2>
 <p><strong>Contexte :</strong> Netflix s’appuyait historiquement sur une infrastructure classique en datacenter. Après un incident majeur de base de données en 2008 et avec la montée du streaming mondial, l’entreprise a engagé une migration massive vers AWS. La migration Cloud est généralement présentée comme terminée début 2016.</p>
-<p><strong>Sources à consulter :</strong> <a class="source-link" href="https://netflixtechblog.com/four-reasons-we-choose-amazons-cloud-as-our-computing-platform-4aceb692afec" target="_blank" rel="noopener">Netflix TechBlog – Four Reasons We Choose Amazon's Cloud</a> ; <a class="source-link" href="https://aws.amazon.com/solutions/case-studies/netflix-case-study/" target="_blank" rel="noopener">AWS – Netflix Case Study</a> ; <a class="source-link" href="https://netflixtechblog.com/5-lessons-weve-learned-using-aws-1f2a28588e4c" target="_blank" rel="noopener">Netflix TechBlog – 5 Lessons We've Learned Using AWS</a>.</p>
+<p><strong>Sources à consulter :</strong> <a class="source-link" href="https://netflixtechblog.com/four-reasons-we-choose-amazons-cloud-as-our-computing-platform-4aceb692afec" target="_blank" rel="noopener">Netflix TechBlog – Four Reasons We Choose Amazon's Cloud</a> ; <a class="source-link" href="https://aws.amazon.com/solutions/case-studies/netflix-case-study/" target="_blank" rel="noopener">AWS – Netflix Case Study</a> ; <a class="source-link" href="https://netflixtechblog.com/5-lessons-weve-learned-using-aws-1f2a28588e4c" target="_blank" rel="noopener">Netflix TechBlog – 5 Lessons We've Learned Using AWS</a> ; <a class="source-link" href="https://netflixtechblog.com/the-netflix-simian-army-16e57fbab116" target="_blank" rel="noopener">Netflix TechBlog – The Netflix Simian Army</a> ; <a class="source-link" href="https://netflix.github.io/chaosmonkey/" target="_blank" rel="noopener">Chaos Monkey – Documentation officielle</a>.</p>
 <div class="task">
 <p><strong>Questions étudiant</strong></p>
 <ol>
@@ -111,8 +111,8 @@
 <p><strong>1. Problème métier :</strong> Netflix devait supporter une croissance rapide, mondiale, avec des pics de charge importants et une exigence forte de disponibilité. Un modèle datacenter classique devenait trop lent et trop rigide pour accompagner le passage massif au streaming.</p>
 <p><strong>2. Pourquoi AWS :</strong> AWS permettait de provisionner rapidement des ressources, d’expérimenter plus vite, de déployer dans une logique plus automatisée et de construire une architecture distribuée. Le Cloud convenait particulièrement à une activité avec charges variables et croissance difficile à prévoir.</p>
 <p><strong>3. Gains :</strong> élasticité, vitesse de déploiement, capacité à expérimenter, meilleure tolérance aux pannes si l’architecture est bien conçue, responsabilisation des équipes produit et plateforme.</p>
-<p><strong>4. Complexités :</strong> architecture distribuée, supervision plus exigeante, coûts variables à surveiller, sécurité Cloud, dépendance fournisseur, conception pour la panne. Le Cloud ne supprime pas la complexité : il la déplace vers l’architecture et l’exploitation.</p>
-<div class="expected"><strong>Piste de réflexion professionnelle :</strong> Netflix n’a pas juste “loué des serveurs”. L’entreprise a changé sa manière de concevoir les applications : microservices, automatisation, chaos engineering, observabilité, déploiement continu.</div>
+<p><strong>4. Complexités :</strong> architecture distribuée, supervision plus exigeante, coûts variables à surveiller, sécurité Cloud, dépendance fournisseur, conception pour la panne. Le Cloud ne supprime pas la complexité : il la déplace vers l’architecture et l’exploitation. À l’échelle de Netflix, cette complexité est telle qu’une panne d’un seul composant peut provoquer une défaillance en cascade sur l’ensemble du service — ce qui impose de tester activement la résilience, et pas seulement de l’espérer.</p>
+<div class=”expected”><strong>Piste de réflexion professionnelle :</strong> Netflix n’a pas juste “loué des serveurs”. L’entreprise a changé sa manière de concevoir les applications : microservices, automatisation, chaos engineering, observabilité, déploiement continu. Pour valider que son architecture distribuée tenait réellement ses promesses de résilience, Netflix a développé le <strong>Chaos Monkey</strong> — un outil qui éteint aléatoirement des instances en production — puis l’a étendu en une suite complète appelée la <strong>Simian Army</strong> (Latency Monkey, Conformity Monkey, Security Monkey…). L’idée centrale : <em>provoquer volontairement des pannes contrôlées pour s’assurer que le système se rétablit seul</em>, plutôt que de découvrir ses fragilités lors d’une vraie crise. C’est une approche contre-intuitive mais fondamentale à grande échelle : la sécurité et la disponibilité ne se décrètent pas, elles se prouvent par le test.</div>
 <p><a class="correction-link" href="#cas-netflix">Retour au cas Netflix</a></p>
 </section>
 
@@ -162,18 +162,14 @@
 <p><strong>Correction type :</strong> pour une application développée spécifiquement, le PaaS ou une plateforme managée est souvent le meilleur compromis : déploiement rapide, peu de gestion système, montée en charge plus simple, coût initial limité. Le SaaS serait pertinent si un outil existant répond déjà au besoin. L’IaaS serait utile si l’école a des contraintes fortes sur l’OS, le réseau ou la migration d’une application existante.</p>
 </section>
 
-<section class="box warnbox">
-<h2>Note formateur – lien avec ton expérience professionnelle</h2>
-<p>Tu peux conclure ainsi : “Dans mes missions Azure / Terraform / DevOps, le sujet n’est pas seulement de créer des ressources Cloud. Le vrai travail consiste à rendre l’infrastructure fiable, reproductible, sécurisée, lisible et maîtrisée dans le temps.”</p>
-<p>Cette phrase relie directement le cours d’introduction aux notions qui viendront ensuite : CI/CD, Infrastructure as Code, environnements, gouvernance, observabilité, tests et maîtrise des coûts.</p>
-</section>
-
-<section class="box small">
+<section class=”box small”>
 <h2>Sources</h2>
 <ul>
 <li>Netflix TechBlog – Four Reasons We Choose Amazon's Cloud : <a href="https://netflixtechblog.com/four-reasons-we-choose-amazons-cloud-as-our-computing-platform-4aceb692afec" target="_blank" rel="noopener">netflixtechblog.com/four-reasons-we-choose-amazons-cloud-as-our-computing-platform-4aceb692afec</a></li>
 <li>AWS – Netflix Case Study : <a href="https://aws.amazon.com/solutions/case-studies/netflix-case-study/" target="_blank" rel="noopener">aws.amazon.com/solutions/case-studies/netflix-case-study</a></li>
 <li>Netflix TechBlog – 5 Lessons We've Learned Using AWS : <a href="https://netflixtechblog.com/5-lessons-weve-learned-using-aws-1f2a28588e4c" target="_blank" rel="noopener">netflixtechblog.com/5-lessons-weve-learned-using-aws-1f2a28588e4c</a></li>
+<li>Netflix TechBlog – The Netflix Simian Army : <a href="https://netflixtechblog.com/the-netflix-simian-army-16e57fbab116" target="_blank" rel="noopener">netflixtechblog.com/the-netflix-simian-army-16e57fbab116</a></li>
+<li>Chaos Monkey – Documentation officielle : <a href="https://netflix.github.io/chaosmonkey/" target="_blank" rel="noopener">netflix.github.io/chaosmonkey</a></li>
 <li>Google Cloud – Spotify Case Study : <a href="https://cloud.google.com/customers/spotify" target="_blank" rel="noopener">cloud.google.com/customers/spotify</a></li>
 <li>Spotify Engineering Blog – Views From The Cloud (Part 1) : <a href="https://engineering.atspotify.com/2019/12/views-from-the-cloud-a-history-of-spotifys-journey-to-the-cloud-part-1-2" target="_blank" rel="noopener">engineering.atspotify.com – Journey to the Cloud</a></li>
 <li>Dropbox.Tech – Scaling to exabytes and beyond : <a href="https://dropbox.tech/infrastructure/magic-pocket-infrastructure" target="_blank" rel="noopener">dropbox.tech/infrastructure/magic-pocket-infrastructure</a></li>
