@@ -352,7 +352,7 @@ terraform init</pre>
     <div class="step">
       <div class="step-header"><div class="step-num">1</div><div class="step-title">Vérifier via le navigateur</div></div>
       <p>Ouvrir dans le navigateur :</p>
-      <pre>https://localhost.localstack.cloud:4566/mon-site-tf-demo/index.html</pre>
+      <pre>http://localhost:4566/mon-site-tf-demo/index.html</pre>
       <div class="ok">La même page qu'en TP 2 doit s'afficher — mais cette fois créée par Terraform.</div>
     </div>
 
@@ -421,7 +421,7 @@ terraform init</pre>
 
     <div class="step">
       <div class="step-header"><div class="step-num">2</div><div class="step-title">Vérifier la suppression</div></div>
-      <p>Tenter d'accéder à <code>https://localhost.localstack.cloud:4566/mon-site-tf-demo/index.html</code> → le bucket n'existe plus, S3 retourne une erreur XML.</p>
+      <p>Tenter d'accéder à <code>http://localhost:4566/mon-site-tf-demo/index.html</code> → le bucket n'existe plus, S3 retourne une erreur XML.</p>
       <p>Vérifier aussi dans le Resource Browser : la liste des buckets est vide.</p>
     </div>
 
@@ -612,7 +612,7 @@ resource "aws_s3_bucket_policy" "site" {
         <tr><td>Blocage accès public</td><td>Non applicable</td><td><code>aws_s3_bucket_public_access_block</code> requis</td></tr>
         <tr><td>Bucket policy</td><td>Non nécessaire</td><td><code>aws_s3_bucket_policy</code> requis</td></tr>
         <tr><td>Nommage bucket</td><td>Local uniquement</td><td>Unique mondialement</td></tr>
-        <tr><td>URL frontend</td><td><code>localhost.localstack.cloud:4566/...</code></td><td><code>bucket.s3.region.amazonaws.com/...</code></td></tr>
+        <tr><td>URL frontend</td><td><code>localhost:4566/bucket/...</code></td><td><code>bucket.s3.region.amazonaws.com/...</code></td></tr>
         <tr><td>Coût</td><td>Gratuit</td><td>Quelques centimes (Free Tier 12 mois)</td></tr>
       </tbody>
     </table>
