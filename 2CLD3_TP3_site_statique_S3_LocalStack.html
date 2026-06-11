@@ -364,6 +364,24 @@ docker run --rm -p 4566:4566 -e LOCALSTACK_AUTH_TOKEN=$LOCALSTACK_TOKEN_FORMATIO
     <div class="step">
       <div class="step-header"><div class="step-num">3</div><div class="step-title">Uploader les fichiers dans le bucket</div></div>
       <p>Dans le Resource Browser → bucket <code>mon-site-web-demo</code> → bouton <strong>Upload</strong>. Uploader les deux fichiers : <code>index.html</code> et <code>error.html</code>.</p>
+      <div class="warn">L'interface web ne définit pas le <code>Content-Type</code> des fichiers. Le navigateur peut alors télécharger le fichier au lieu de l'afficher. Préférer la CLI ci-dessous pour garantir le bon type MIME.</div>
+      <p><strong>Alternative CLI (recommandée)</strong> — répéter pour chaque fichier à uploader :</p>
+      <pre># Windows PowerShell
+aws --endpoint-url=http://localhost:4566 `
+    s3 cp "2CLD3P - initiation aux clouds/&lt;fichier&gt;.html" `
+    s3://mon-site-web-demo/&lt;fichier&gt;.html `
+    --content-type "text/html" `
+    --no-sign-request `
+    --region us-east-1
+
+# macOS / Linux
+aws --endpoint-url=http://localhost:4566 \
+    s3 cp "2CLD3P - initiation aux clouds/&lt;fichier&gt;.html" \
+    s3://mon-site-web-demo/&lt;fichier&gt;.html \
+    --content-type "text/html" \
+    --no-sign-request \
+    --region us-east-1</pre>
+      <div class="info">Remplacer <code>&lt;fichier&gt;</code> par le nom réel : <code>index</code> puis <code>error</code>. Le chemin source correspond au dossier <code>2CLD3P - initiation aux clouds/</code> présent dans le repo.</div>
       <div class="ok">Les deux fichiers doivent apparaître à la racine du bucket. Vérifier qu'ils ne sont <strong>pas</strong> dans un sous-dossier.</div>
     </div>
 
@@ -378,10 +396,10 @@ docker run --rm -p 4566:4566 -e LOCALSTACK_AUTH_TOKEN=$LOCALSTACK_TOKEN_FORMATIO
     <div class="step">
       <div class="step-header"><div class="step-num">1</div><div class="step-title">Accéder au site via le navigateur</div></div>
       <p>Sur LocalStack, l'URL d'accès à un objet S3 est :</p>
-      <pre>https://localhost.localstack.cloud:4566/mon-site-web-demo/index.html</pre>
+      <pre>http://localhost:4566/mon-site-web-demo/index.html</pre>
       <p>Ouvrir cette URL dans le navigateur. La page HTML doit s'afficher.</p>
       <div class="info">
-        <strong>Pourquoi cette URL et pas <code>http://localhost:4566/...</code> ?</strong> Le domaine <code>localhost.localstack.cloud</code> est fourni par LocalStack : il résout vers <code>127.0.0.1</code> (ta machine) mais via HTTPS. Le navigateur le traite comme une vraie page web et rend le HTML. Avec <code>http://localhost:4566</code>, certains navigateurs ou outils (WinSCP…) interceptent la réponse et proposent de télécharger le fichier au lieu de l'afficher.
+        <strong>Pourquoi le HTML s'affiche-t-il et ne se télécharge-t-il pas ?</strong> Parce que tu as uploadé tes fichiers avec <code>--content-type "text/html"</code> via la CLI. Le navigateur reçoit l'en-tête HTTP <code>Content-Type: text/html</code> et affiche le HTML directement. Sans cet en-tête (upload via l'interface web), le navigateur ne sait pas que c'est du HTML et propose de télécharger le fichier.
       </div>
       <div class="ok">🎉 Si la page s'affiche correctement : ton site est "hébergé" sur S3 local. Même principe en production AWS réelle — seule l'URL change.</div>
     </div>
@@ -389,7 +407,7 @@ docker run --rm -p 4566:4566 -e LOCALSTACK_AUTH_TOKEN=$LOCALSTACK_TOKEN_FORMATIO
     <div class="step">
       <div class="step-header"><div class="step-num">2</div><div class="step-title">Tester une URL inexistante</div></div>
       <p>Accéder à une URL qui n'existe pas :</p>
-      <pre>https://localhost.localstack.cloud:4566/mon-site-web-demo/page-inexistante.html</pre>
+      <pre>http://localhost:4566/mon-site-web-demo/page-inexistante.html</pre>
       <p>LocalStack retourne un <strong>XML d'erreur brut</strong> (<code>NoSuchKey</code>) — c'est le comportement attendu. Sans Static Website Hosting configuré, il n'y a aucun mécanisme pour rediriger vers <code>error.html</code>.</p>
       <div class="info">
         <strong>Sur AWS réel</strong>, en activant le Static Website Hosting avec un "Error document" défini sur <code>error.html</code>, S3 retournerait ta page d'erreur personnalisée à la place du XML. C'est une des différences concrètes entre LocalStack (émulation simplifiée) et la production.
@@ -409,7 +427,7 @@ docker run --rm -p 4566:4566 -e LOCALSTACK_AUTH_TOKEN=$LOCALSTACK_TOKEN_FORMATIO
     <ul>
       <li>Un bucket S3 nommé <code>mon-site-web-demo</code> visible dans le Resource Browser</li>
       <li>Deux fichiers <code>index.html</code> et <code>error.html</code> uploadés</li>
-      <li>Le site accessible sur <code>https://localhost.localstack.cloud:4566/mon-site-web-demo/index.html</code></li>
+      <li>Le site accessible sur <code>http://localhost:4566/mon-site-web-demo/index.html</code></li>
       <li>Compréhension des étapes : bucket → permissions → policy → upload → URL</li>
     </ul>
   </div>
@@ -577,6 +595,8 @@ docker run hello-world</pre>
       <pre>$env:LOCALSTACK_AUTH_TOKEN = "ls-XXXXX"</pre>
       <p><strong>Windows (PowerShell) — persistant pour ton compte utilisateur :</strong></p>
       <pre>[Environment]::SetEnvironmentVariable("LOCALSTACK_AUTH_TOKEN", "ls-XXXXX", "User")</pre>
+      <p>Ou ouvrir directement le gestionnaire graphique de variables d'environnement <strong>sans droits administrateur</strong> :</p>
+      <pre>rundll32 sysdm.cpl,EditEnvironmentVariables</pre>
       <p><strong>macOS / Linux — session courante :</strong></p>
       <pre>export LOCALSTACK_AUTH_TOKEN="ls-XXXXX"</pre>
       <p><strong>macOS / Linux — persistant (dans ~/.bashrc ou ~/.zshrc) :</strong></p>
@@ -669,7 +689,7 @@ source ~/.zshrc</pre>
         <tr>
           <td>Fichier affiché en texte brut ou téléchargé au lieu d'être rendu</td>
           <td>Content-Type non défini lors de l'upload via l'interface web</td>
-          <td>Uploader via la CLI : <code>aws --endpoint-url=http://localhost:4566 s3 cp fichier.html s3://bucket/ --content-type "text/html" --no-sign-request</code></td>
+          <td>Uploader via la CLI avec <code>--content-type</code> explicite (voir étape 5 – upload) : <code>aws --endpoint-url=http://localhost:4566 s3 cp "2CLD3P - initiation aux clouds/&lt;fichier&gt;.html" s3://mon-site-web-demo/&lt;fichier&gt;.html --content-type "text/html" --no-sign-request --region us-east-1</code></td>
         </tr>
       </tbody>
     </table>
